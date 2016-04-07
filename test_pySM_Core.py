@@ -208,5 +208,22 @@ class TestPySM_Core(TestCase):
             core.set_memory_location(offset, value)
             self.assertEqual(core.get_memory_location(offset & 0xffff), value & 0xff)
 
+        # for l in core.dump_memory():
+        #     LOG.debug(l)
+
+    def test_add_symbol(self):
+        LOG.debug("Testing symbol management ...")
+        core = PySM_Core()
+
+        msg = [ord(c) for c in "Hello World!"]
+        msg.append(0x00)
+        LOG.debug("message: {}".format(msg))
+        core.add_pointer('ptr')
+        core.set_pointer_value('ptr', core.malloc(len(msg)))
+        core.set_memory_range(core.get_poointer_value('ptr'), msg)
+        core.free(core.get_poointer_value('ptr'))
+        core.delete_pointer('ptr')
+
+
         for l in core.dump_memory():
-            LOG.debug(l)
+             LOG.debug(l)

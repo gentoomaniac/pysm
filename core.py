@@ -1,6 +1,6 @@
 import logging
-import re
 import string
+
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -31,6 +31,50 @@ class PySM_Core(object):
         # special stuff
         self._IP = 0        # instruction pointer
         self._EFLAGS = 0    # Flags register
+
+        # some management tables
+
+        self._memtab = {}
+        self._pointer = {}
+
+    def malloc(self, size):
+        address = 0x00
+        self._memtab[address] = size
+        LOG.debug("Allocated {} bytes at address {:04X}".format(size, address))
+        LOG.debug("Memory allocation table: {}".format(self._memtab))
+        return address
+
+    def free(self, address):
+        if address in self._memtab:
+            LOG.debug("Freed {} bytes at address {:04X}".format(self._memtab[address], address))
+            self._memtab.pop(address)
+        LOG.debug("Memory allocation table: {}".format(self._memtab))
+
+    def add_pointer(self, name, value=0x00):
+        if name in self._pointer:
+            raise ValueError("{} already exists".format(name))
+        self._pointer[name] = value & 0xffff
+        LOG.debug("Added new pointer '{}' with value {:04X}".format(name, value))
+        LOG.debug("Pointer table: {}".format(self._pointer))
+
+    def delete_pointer(self, name):
+        if name in self._pointer:
+            LOG.debug("Removed pointer '{}' with value {:04X}".format(name, self._pointer[name]))
+            self._pointer.pop(name)
+        LOG.debug("Pointer table: {}".format(self._pointer))
+
+    def get_poointer_value(self, name):
+            return self._pointer.get(name, None)
+
+    def set_pointer_value(self, name, value):
+        if name not in self._pointer:
+            raise ValueError("{} does not exist".format(name))
+        self._pointer[name] = value & 0xffff
+
+    def set_memory_range(self, address, values):
+        for v in values:
+            self.set_memory_location(address, v)
+            address += 1
 
     def set_memory_location(self, offset, value):
         if not isinstance(offset, int) or not isinstance(value, int):
