@@ -23,3 +23,7 @@ class Interpreter(object):
             if i.instruction == 'MOV':
                 setattr(self._core, i.parameters[0], int(i.parameters[1]))
                 LOG.debug(self._core.dump_registers())
+        memdump = self._core.dump_memory()
+        LOG.debug("Memory dump:".format())
+        for row in memdump:
+            LOG.debug(row)

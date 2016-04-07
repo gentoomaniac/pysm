@@ -1,4 +1,6 @@
 import logging
+import re
+import string
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -10,6 +12,10 @@ LOG.addHandler(ch)
 class PySM_Core(object):
 
     def __init__(self):
+        # memory
+        self._mem = [int(0)] * (0xffff+1)
+
+        # registers
         self._EAX = 0
         self._EBX = 0
         self._ECX = 0
@@ -22,8 +28,47 @@ class PySM_Core(object):
         self._ESI = 0
         self._EDI = 0
 
-        self._IP = 0
-        self._EFLAGS = 0
+        # special stuff
+        self._IP = 0        # instruction pointer
+        self._EFLAGS = 0    # Flags register
+
+    def set_memory_location(self, offset, value):
+        if not isinstance(offset, int) or not isinstance(value, int):
+            raise ValueError("Address or value must be integers")
+        offset &= 0xffff
+        value &= 0xff
+        self._mem[offset] = value
+        LOG.debug("memory at address {:04X} is set to {:02X}".format(offset, self._mem[offset]))
+
+    def get_memory_location(self, offset):
+        if not isinstance(offset, int):
+           raise ValueError("Address must be an integer")
+        offset &= 0xffff
+        return self._mem[offset]
+
+    def dump_memory(self):
+        result = []
+        count = 1
+        rowcount = 0
+        line = "{:04X}h: ".format(rowcount*0x0f)
+        text = ""
+        for byte in self._mem:
+            line += "{:02X} ".format(int(byte))
+            if chr(byte) in string.printable:
+                text += chr(byte)
+            else:
+                text += '.'
+
+            if (count % 0x10) == 0:
+                line += "    {}".format(text)
+                result.append(line)
+                rowcount += 1
+                line = "{:04X}h: ".format(rowcount*0x10)
+                text = ""
+
+            count += 1
+
+        return [re.sub(r"[\t\n\r]", " ", r) for r in result]
 
     def dump_registers(self):
         return """

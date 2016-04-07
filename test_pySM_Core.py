@@ -1,9 +1,21 @@
+import random
+import logging
+
 from unittest import TestCase
 
 from core import PySM_Core
 
+FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
+LOG = logging.getLogger('tests')
+LOG.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setFormatter(logging.Formatter(FORMAT))
+LOG.addHandler(ch)
+
 class TestPySM_Core(TestCase):
     def test_EAX(self):
+        LOG.debug("Testing EAX registers ...")
+
         core = PySM_Core()
 
         self.assertEqual(core.EAX, 0)
@@ -46,6 +58,8 @@ class TestPySM_Core(TestCase):
 
 
     def test_EBX(self):
+        LOG.debug("Testing EBX registers ...")
+
         core = PySM_Core()
 
         self.assertEqual(core.EBX, 0)
@@ -88,6 +102,8 @@ class TestPySM_Core(TestCase):
 
 
     def test_ECX(self):
+        LOG.debug("Testing ECX registers ...")
+
         core = PySM_Core()
 
         self.assertEqual(core.ECX, 0)
@@ -130,6 +146,8 @@ class TestPySM_Core(TestCase):
 
 
     def test_EDX(self):
+        LOG.debug("Testing EDX registers ...")
+
         core = PySM_Core()
 
         self.assertEqual(core.EDX, 0)
@@ -169,3 +187,30 @@ class TestPySM_Core(TestCase):
         self.assertEqual(core.DX, 65535)
         self.assertEqual(core.DH, 255)
         self.assertEqual(core.DL, 255)
+
+    def test_set_memory_location(self):
+        LOG.debug("Testing memory access ...")
+        core = PySM_Core()
+
+        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0, 0))
+        core.set_memory_location(0, 0)
+        self.assertEqual(core.get_memory_location(0), 0)
+
+        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0xffff, 0xff))
+        core.set_memory_location(0xffff, 0xff)
+        self.assertEqual(core.get_memory_location(0xffff), 0xff)
+
+        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0x10000, 0xff))
+        core.set_memory_location(0x10000, 0xff)
+        self.assertEqual(core.get_memory_location(0x00), 0xff)
+
+
+        for run in range(1000):
+            offset = random.randint(0x00,0xffffff)
+            value = random.randint(0x00, 0xffff)
+            LOG.debug("... setting memory at address {:06X} to {:04X}".format(offset, value))
+            core.set_memory_location(offset, value)
+            self.assertEqual(core.get_memory_location(offset & 0xffff), value & 0xff)
+
+        for l in core.dump_memory():
+            LOG.debug(l)
