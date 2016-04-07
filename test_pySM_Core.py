@@ -211,19 +211,64 @@ class TestPySM_Core(TestCase):
         # for l in core.dump_memory():
         #     LOG.debug(l)
 
-    def test_add_symbol(self):
+    def test_add_ptr(self):
         LOG.debug("Testing symbol management ...")
         core = PySM_Core()
 
-        msg = [ord(c) for c in "Hello World!"]
+        #msg = [ord(c) for c in "Hello World!"]
+        #msg.append(0x00)
+        #LOG.debug("message: {}".format(msg))
+        for i in range(10):
+            ptr_name = "ptr_{}".format(i)
+            msg = [ord(c) for c in "Hello World #{}!".format(i)]
+            msg.append(0x00)
+
+            core.add_pointer(ptr_name)
+            core.set_pointer_value(ptr_name, core.malloc(len(msg)))
+            core.set_memory_range(core.get_poointer_value(ptr_name), msg)
+            for l in core.dump_memory(limit=0x0005):
+                LOG.debug(l)
+
+        ptr_name = 'ptr_2'
+        core.free(core.get_poointer_value(ptr_name))
+        core.delete_pointer(ptr_name)
+        for l in core.dump_memory(limit=0x0005):
+            LOG.debug(l)
+
+        ptr_name = 'ptr_4'
+        core.free(core.get_poointer_value(ptr_name))
+        core.delete_pointer(ptr_name)
+        for l in core.dump_memory(limit=0x0005):
+            LOG.debug(l)
+
+        ptr_name = 'ptr_6'
+        core.free(core.get_poointer_value(ptr_name))
+        core.delete_pointer(ptr_name)
+        for l in core.dump_memory(limit=0x0005):
+            LOG.debug(l)
+
+        ptr_name = "ptr_{}_n".format(1)
+        msg = [ord(c) for c in "Hello!".upper()]
         msg.append(0x00)
-        LOG.debug("message: {}".format(msg))
-        core.add_pointer('ptr')
-        core.set_pointer_value('ptr', core.malloc(len(msg)))
-        core.set_memory_range(core.get_poointer_value('ptr'), msg)
-        core.free(core.get_poointer_value('ptr'))
-        core.delete_pointer('ptr')
+        core.add_pointer(ptr_name)
+        core.set_pointer_value(ptr_name, core.malloc(len(msg)))
+        core.set_memory_range(core.get_poointer_value(ptr_name), msg)
+        for l in core.dump_memory(limit=0x0005):
+            LOG.debug(l)
+
+        ptr_name = "ptr_{}_n".format(2)
+        msg = [ord(c) for c in "World!".format(i).upper()]
+        msg.append(0x00)
+        core.add_pointer(ptr_name)
+        core.set_pointer_value(ptr_name, core.malloc(len(msg)))
+        core.set_memory_range(core.get_poointer_value(ptr_name), msg)
+        for l in core.dump_memory(limit=0x0005):
+            LOG.debug(l)
+
+            # for i in range(10):
+        #     ptr_name = "ptr_{}".format(i)
+        #     core.free(core.get_poointer_value(ptr_name))
+        #     core.delete_pointer(ptr_name)
 
 
-        for l in core.dump_memory():
-             LOG.debug(l)
+

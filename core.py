@@ -1,3 +1,4 @@
+import collections
 import logging
 import string
 
@@ -37,24 +38,60 @@ class PySM_Core(object):
         self._memtab = {}
         self._pointer = {}
 
+    def _mallof_find_free(self, size):
+        last_addr = 0x00
+        current_addr = None
+        is_end = True
+
+        # transform dict to flat list
+        memtab = collections.OrderedDict(sorted(self._memtab.items())).items()
+        memtab = [i for s in memtab for i in s]
+
+
+        # no memory reserved
+        if not memtab:
+            LOG.debug("Memtab is empty. Giving 0x00.")
+            return 0x00
+
+        # check the amount of from the ending of the last block to the next block
+        for addr in memtab:
+            is_end = not is_end
+            current_addr = addr
+            if not is_end:
+                LOG.debug("Checking start address: {:04X} - {:04X}".format(addr, last_addr))
+                if (addr - last_addr) >= size:
+                    LOG.debug("Found address: {:04X}".format(last_addr))
+                    return last_addr
+
+            last_addr = addr
+
+        if is_end and (0xffff - current_addr >= size):
+            LOG.debug("current address is {} and we have enough space".format(current_addr))
+            return current_addr
+
+        return None
+
     def malloc(self, size):
-        address = 0x00
-        self._memtab[address] = size
+        address = self._mallof_find_free(size)
+        if address is None:
+            raise Exception("Couldn't allocate memory")
+
+        self._memtab[address] = address + size
         LOG.debug("Allocated {} bytes at address {:04X}".format(size, address))
         LOG.debug("Memory allocation table: {}".format(self._memtab))
         return address
 
     def free(self, address):
         if address in self._memtab:
-            LOG.debug("Freed {} bytes at address {:04X}".format(self._memtab[address], address))
+            LOG.debug("Freed {} bytes at address {:04X}".format(address, address))
             self._memtab.pop(address)
         LOG.debug("Memory allocation table: {}".format(self._memtab))
 
     def add_pointer(self, name, value=0x00):
         if name in self._pointer:
             raise ValueError("{} already exists".format(name))
+        LOG.debug("Adding new pointer '{}' with value {:04X}".format(name, value))
         self._pointer[name] = value & 0xffff
-        LOG.debug("Added new pointer '{}' with value {:04X}".format(name, value))
         LOG.debug("Pointer table: {}".format(self._pointer))
 
     def delete_pointer(self, name):
@@ -82,7 +119,7 @@ class PySM_Core(object):
         offset &= 0xffff
         value &= 0xff
         self._mem[offset] = value
-        LOG.debug("memory at address {:04X} is set to {:02X}".format(offset, self._mem[offset]))
+        #LOG.debug("memory at address {:04X} is set to {:02X}".format(offset, self._mem[offset]))
 
     def get_memory_location(self, offset):
         if not isinstance(offset, int):
@@ -90,7 +127,7 @@ class PySM_Core(object):
         offset &= 0xffff
         return self._mem[offset]
 
-    def dump_memory(self):
+    def dump_memory(self, limit=0xffff):
         result = []
         count = 1
         rowcount = 0
@@ -110,6 +147,8 @@ class PySM_Core(object):
                 line = "{:04X}h: ".format(rowcount*0x10)
                 text = ""
 
+            if rowcount >= limit:
+                break
             count += 1
 
         return result #[re.sub(r"[\t\n\r]", " ", r) for r in result]
