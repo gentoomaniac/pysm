@@ -54,10 +54,10 @@ class PySM_Core(object):
         text = ""
         for byte in self._mem:
             line += "{:02X} ".format(int(byte))
-            if chr(byte) in string.printable:
-                text += chr(byte)
-            else:
+            if chr(byte) in string.whitespace or byte == 0x00:
                 text += '.'
+            else:
+                text += chr(byte)
 
             if (count % 0x10) == 0:
                 line += "    {}".format(text)
@@ -68,7 +68,7 @@ class PySM_Core(object):
 
             count += 1
 
-        return [re.sub(r"[\t\n\r]", " ", r) for r in result]
+        return result #[re.sub(r"[\t\n\r]", " ", r) for r in result]
 
     def dump_registers(self):
         return """

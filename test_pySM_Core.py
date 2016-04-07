@@ -192,15 +192,12 @@ class TestPySM_Core(TestCase):
         LOG.debug("Testing memory access ...")
         core = PySM_Core()
 
-        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0, 0))
         core.set_memory_location(0, 0)
         self.assertEqual(core.get_memory_location(0), 0)
 
-        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0xffff, 0xff))
         core.set_memory_location(0xffff, 0xff)
         self.assertEqual(core.get_memory_location(0xffff), 0xff)
 
-        LOG.debug("... setting memory at address {:04X} to {:02X}".format(0x10000, 0xff))
         core.set_memory_location(0x10000, 0xff)
         self.assertEqual(core.get_memory_location(0x00), 0xff)
 
@@ -208,7 +205,6 @@ class TestPySM_Core(TestCase):
         for run in range(1000):
             offset = random.randint(0x00,0xffffff)
             value = random.randint(0x00, 0xffff)
-            LOG.debug("... setting memory at address {:06X} to {:04X}".format(offset, value))
             core.set_memory_location(offset, value)
             self.assertEqual(core.get_memory_location(offset & 0xffff), value & 0xff)
 
