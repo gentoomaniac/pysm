@@ -1,4 +1,5 @@
 import collections
+import json
 import logging
 import string
 
@@ -50,7 +51,6 @@ class PySM_Core(object):
 
         # no memory reserved
         if not memtab:
-            LOG.debug("Memtab is empty. Giving 0x00.")
             return 0x00
 
         # check the amount of from the ending of the last block to the next block
@@ -58,16 +58,13 @@ class PySM_Core(object):
             is_end = not is_end
             current_addr = addr
             if not is_end:
-                LOG.debug("Checking start address: {:04X} - {:04X}".format(addr, last_addr))
-                if (addr - last_addr) >= size:
-                    LOG.debug("Found address: {:04X}".format(last_addr))
-                    return last_addr
+                if (addr - last_addr) > size:
+                    return last_addr + 1
 
             last_addr = addr
 
-        if is_end and (0xffff - current_addr >= size):
-            LOG.debug("current address is {} and we have enough space".format(current_addr))
-            return current_addr
+        if is_end and (0xffff - current_addr > size):
+            return current_addr + 1
 
         return None
 
@@ -76,29 +73,29 @@ class PySM_Core(object):
         if address is None:
             raise Exception("Couldn't allocate memory")
 
-        self._memtab[address] = address + size
+        self._memtab[address] = address + size-1
         LOG.debug("Allocated {} bytes at address {:04X}".format(size, address))
-        LOG.debug("Memory allocation table: {}".format(self._memtab))
+        LOG.debug("Memory allocation table: {}".format(json.dumps(self._memtab, sort_keys=True)))
         return address
 
     def free(self, address):
         if address in self._memtab:
             LOG.debug("Freed {} bytes at address {:04X}".format(address, address))
             self._memtab.pop(address)
-        LOG.debug("Memory allocation table: {}".format(self._memtab))
+        LOG.debug("Memory allocation table: {}".format(json.dumps(self._memtab, sort_keys=True)))
 
     def add_pointer(self, name, value=0x00):
         if name in self._pointer:
             raise ValueError("{} already exists".format(name))
         LOG.debug("Adding new pointer '{}' with value {:04X}".format(name, value))
         self._pointer[name] = value & 0xffff
-        LOG.debug("Pointer table: {}".format(self._pointer))
+        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
 
     def delete_pointer(self, name):
         if name in self._pointer:
             LOG.debug("Removed pointer '{}' with value {:04X}".format(name, self._pointer[name]))
             self._pointer.pop(name)
-        LOG.debug("Pointer table: {}".format(self._pointer))
+        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
 
     def get_poointer_value(self, name):
             return self._pointer.get(name, None)
