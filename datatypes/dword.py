@@ -34,3 +34,6 @@ class Dword(object):
     @low.setter
     def low(self, value):
         self._low.value = value
+
+    def get_bytes(self):
+        return self._high.get_bytes() + self._low.get_bytes()

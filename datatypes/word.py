@@ -35,3 +35,6 @@ class Word(object):
     @low.setter
     def low(self, value):
         self._low.value = value
+
+    def get_bytes(self):
+        return [self._high.value, self._low.value]
