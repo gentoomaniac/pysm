@@ -13,8 +13,8 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
-class TestPySM_Core(TestCase):
 
+class TestPySM_Core(TestCase):
     def test_set_memory_location(self):
         LOG.debug("Testing memory access ...")
         core = PySM_Core()
@@ -28,9 +28,8 @@ class TestPySM_Core(TestCase):
         core.set_memory_location(0x10000, 0xff)
         self.assertEqual(core.get_memory_location(0x00), 0xff)
 
-
         for run in range(100000):
-            offset = random.randint(0x00,0xffffff)
+            offset = random.randint(0x00, 0xffffff)
             value = random.randint(0x00, 0xffff)
             core.set_memory_location(offset, value)
             self.assertEqual(core.get_memory_location(offset & 0xffff), value & 0xff)
@@ -88,7 +87,6 @@ class TestPySM_Core(TestCase):
         for l in core.dump_memory(limit=0x0006):
             LOG.debug(l)
 
-
     def test_inc(self):
         LOG.debug("Testing inc() ...")
         core = PySM_Core()
@@ -116,7 +114,20 @@ class TestPySM_Core(TestCase):
         self.assertEqual(core.EAX, 0xffffffff)
         self.assertGreater(core.EFLAGS & 0x01, 0)
 
-    def test_set_m1em_range(self):
+    def test_mov(self):
+        LOG.debug("Testing mov() ...")
+        core = PySM_Core()
+
+        core.mov("EAX", 0xff)
+        self.assertEqual(core.EAX, 0xff)
+
+        core.mov("EBX", "EAX")
+        self.assertEqual(core.EBX, 0xff)
+
+        core.mov("CH", "EAX")
+        self.assertEqual(core.CH, 0xff)
+
+    def test_set_mem_range(self):
         LOG.debug("Testing set_memory_range() ...")
         core = PySM_Core()
 
@@ -159,6 +170,3 @@ class TestPySM_Core(TestCase):
             #     ptr_name = "ptr_{}".format(i)
             #     core.free(core.get_pointer_value(ptr_name))
             #     core.delete_pointer(ptr_name)
-
-
-

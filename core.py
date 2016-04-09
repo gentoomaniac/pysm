@@ -6,6 +6,8 @@ import string
 import datatypes.exceptions as exceptions
 import register as r
 
+from datatypes.word import *
+from datatypes.dword import *
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -38,7 +40,6 @@ class PySM_Core(object):
         self._EFLAGS = 0    # Flags register
 
         # some management tables
-
         self._memtab = {}
         self._pointer = {}
 
@@ -60,11 +61,30 @@ class PySM_Core(object):
             try:
                 setattr(self, target.upper(), value - 1)
             except exceptions.CarryOverException:
-                LOG.debug("seting CO bit")
                 self._EFLAGS |= 0x01
         else:
             raise ValueError("Invalid DEC parameter")
 
+    # TODO: needs size check to only allow same size target and source
+    def mov(self, target, src):
+        if isinstance(src, Word):
+            # src is memory address
+            value = 0
+        elif isinstance(src, str):
+            # src is a register
+            value = getattr(self, src.upper())
+        elif isinstance(src, int):
+            # src is plain integer
+            value = src
+
+        if isinstance(target, str):
+            try:
+                setattr(self, target.upper(), value )
+            except exceptions.CarryOverException:
+                self._EFLAGS |= 0x01
+
+
+    # need to move to the interpreter
     def add_pointer(self, name, value=0x00):
         if name in self._pointer:
             raise ValueError("{} already exists".format(name))
@@ -349,6 +369,7 @@ class PySM_Core(object):
     def DL(self, value):
         self._EDX.low = value
         LOG.debug("DL is now {}".format(self.DL))
+
 
     @property
     def EFLAGS(self):
