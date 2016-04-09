@@ -16,7 +16,7 @@ class Dword(object):
     def value(self, value):
         self._high.value = ((value & 0xffff0000) >> 16)
         self._low.value = value & 0x0000ffff
-        if value > 0xffffffff:
+        if value > 0xffffffff or value < 0x00:
             raise CarryOverException()
 
     @property

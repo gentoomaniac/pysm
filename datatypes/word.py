@@ -17,7 +17,7 @@ class Word(object):
     def value(self, value):
         self._high.value =((value & 0xff00) >> 8)
         self._low.value = value & 0x00ff
-        if value > 0xffff:
+        if value > 0xffff or value < 0x00:
             raise CarryOverException()
 
     @property

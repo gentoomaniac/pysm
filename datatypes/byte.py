@@ -16,5 +16,5 @@ class Byte(object):
         :return: True if an overflow happened, else False
         """
         self._data = value & 0xff
-        if value > 0xff:
+        if value > 0xff or value < 0x00:
             raise CarryOverException()

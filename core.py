@@ -3,6 +3,7 @@ import json
 import logging
 import string
 
+import datatypes.exceptions as exceptions
 import register as r
 
 
@@ -42,29 +43,27 @@ class PySM_Core(object):
         self._pointer = {}
 
     def inc(self, target):
-        if target in self._pointer:
-            LOG.debug("Incrementing memory location at {:04X} referenced by {}".format(self._pointer[target], target))
-            value = self.get_memory_location(self._pointer[target])
-            self.set_memory_location(self._pointer[target], value + 1)
-            self._set_co_bit(value, value + 1, 0xff)
-        elif isinstance(target, int):
-            LOG.debug("Incrementing memory location {:04X}".format(target & 0xffff))
-            address = target & 0xffff
-            value = self.get_memory_location(address)
-            self.set_memory_location(address, value + 1)
-            self._set_co_bit(value, value + 1, 0xff)
-        elif hasattr(self, target.upper()):
+        if hasattr(self, target.upper()):
             LOG.debug("Incrementing register {}".format(target.upper()))
             value = getattr(self, target.upper())
-            setattr(self, target.upper(), value + 1)
-            self._set_co_bit(value, value + 1, 0xff) ### TODO: how to figure out which size the register had?
+            try:
+                setattr(self, target.upper(), value + 1)
+            except exceptions.CarryOverException:
+                self._EFLAGS |= 0x01
         else:
-            raise ValueError("Invalid ADD parameter")
+            raise ValueError("Invalid INC parameter")
 
-    def _set_co_bit(self, old_value, new_value, max):
-        # set overflow flag
-        if old_value > ( new_value & max):
-            self._EFLAGS | 0x01
+    def dec(self, target):
+        if hasattr(self, target.upper()):
+            LOG.debug("Decrementing register {}".format(target.upper()))
+            value = getattr(self, target.upper())
+            try:
+                setattr(self, target.upper(), value - 1)
+            except exceptions.CarryOverException:
+                LOG.debug("seting CO bit")
+                self._EFLAGS |= 0x01
+        else:
+            raise ValueError("Invalid DEC parameter")
 
     def add_pointer(self, name, value=0x00):
         if name in self._pointer:
@@ -350,3 +349,11 @@ class PySM_Core(object):
     def DL(self, value):
         self._EDX.low = value
         LOG.debug("DL is now {}".format(self.DL))
+
+    @property
+    def EFLAGS(self):
+        return self._EFLAGS
+
+    @EFLAGS.setter
+    def EFLAGS(self, value):
+        raise TypeError("EFLAGS is a readonly register")
