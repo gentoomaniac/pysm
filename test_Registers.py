@@ -12,6 +12,8 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
+
+### TODO: test register class instead
 class TestRegisters(TestCase):
     def test_EAX(self):
         LOG.debug("Testing EAX registers ...")

@@ -3,6 +3,8 @@ import json
 import logging
 import string
 
+import register as r
+
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -18,17 +20,17 @@ class PySM_Core(object):
         self._mem = [int(0)] * (0xffff+1)
 
         # registers
-        self._EAX = 0
-        self._EBX = 0
-        self._ECX = 0
-        self._EDX = 0
+        self._EAX = r.Register()
+        self._EBX = r.Register()
+        self._ECX = r.Register()
+        self._EDX = r.Register()
 
-        self._EIP = 0
-        self._ESP = 0
-        self._EBP = 0
+        self._EIP = r.Register()
+        self._ESP = r.Register()
+        self._EBP = r.Register()
 
-        self._ESI = 0
-        self._EDI = 0
+        self._ESI = r.Register()
+        self._EDI = r.Register()
 
         # special stuff
         self._IP = 0        # instruction pointer
@@ -38,6 +40,31 @@ class PySM_Core(object):
 
         self._memtab = {}
         self._pointer = {}
+
+    def inc(self, target):
+        if target in self._pointer:
+            LOG.debug("Incrementing memory location at {:04X} referenced by {}".format(self._pointer[target], target))
+            value = self.get_memory_location(self._pointer[target])
+            self.set_memory_location(self._pointer[target], value + 1)
+            self._set_co_bit(value, value + 1, 0xff)
+        elif isinstance(target, int):
+            LOG.debug("Incrementing memory location {:04X}".format(target & 0xffff))
+            address = target & 0xffff
+            value = self.get_memory_location(address)
+            self.set_memory_location(address, value + 1)
+            self._set_co_bit(value, value + 1, 0xff)
+        elif hasattr(self, target.upper()):
+            LOG.debug("Incrementing register {}".format(target.upper()))
+            value = getattr(self, target.upper())
+            setattr(self, target.upper(), value + 1)
+            self._set_co_bit(value, value + 1, 0xff) ### TODO: how to figure out which size the register had?
+        else:
+            raise ValueError("Invalid ADD parameter")
+
+    def _set_co_bit(self, old_value, new_value, max):
+        # set overflow flag
+        if old_value > ( new_value & max):
+            self._EFLAGS | 0x01
 
     def _mallof_find_free(self, size):
         last_addr = 0x00
@@ -97,7 +124,7 @@ class PySM_Core(object):
             self._pointer.pop(name)
         LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
 
-    def get_poointer_value(self, name):
+    def get_pointer_value(self, name):
             return self._pointer.get(name, None)
 
     def set_pointer_value(self, name, value):
@@ -148,7 +175,7 @@ class PySM_Core(object):
                 break
             count += 1
 
-        return result #[re.sub(r"[\t\n\r]", " ", r) for r in result]
+        return result
 
     def dump_registers(self):
         return """
@@ -156,7 +183,7 @@ class PySM_Core(object):
         EBX: {:32b}
         ECX: {:32b}
         EDX: {:32b}
-        """.format(self._EAX, self._EBX, self._ECX, self._EDX)
+        """.format(self._EAX.full, self._EBX.full, self._ECX.full, self._EDX.full)
 
     @property
     def EAX(self):
@@ -164,58 +191,38 @@ class PySM_Core(object):
         it is used in input/output and most arithmetic instructions. For example, in multiplication operation,
         one operand is stored in EAX or AX or AL register according to the size of the operand
         """
-        return self._EAX & 0xffffffff
+        return self._EAX.full
 
     @EAX.setter
     def EAX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EAX = value & 0xffffffff
+        self._EAX.full = value
         LOG.debug("EAX is now {}".format(self.EAX))
 
     @property
     def AX(self):
-        return self._EAX & 0xffff
+        return self._EAX.half
 
     @AX.setter
     def AX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EAX = (self._EAX | 0x0000ffff) & ((value & 0xffff) | 0xffff0000)
+        self._EAX.half = value
         LOG.debug("AX is now {}".format(self.AX))
 
     @property
     def AH(self):
-        return (self._EAX & 0xff00) >> 8
+        return self._EAX.high
 
     @AH.setter
     def AH(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        limited_value = value & 0xff                # limit the value to 8 bits
-        shifted_value = limited_value << 8          # shift those bits to the right position
-        masked_value = shifted_value | 0xffff00ff   # mask the bits we don't want to update
-
-        eax_masked = self._EAX | 0x0000ff00         # mask out the bits we want to update
-        #LOG.debug("EAX:        {0:32b}".format(self._EAX))
-        #LOG.debug("eax_masked: {0:32b}".format(eax_masked))
-        #LOG.debug("value:      {0:32b}".format(value))
-        #LOG.debug("value lim:  {0:32b}".format(limited_value))
-        #LOG.debug("value shift:{0:32b}".format(shifted_value))
-        #LOG.debug("value mask: {0:32b}".format(masked_value))
-        #LOG.debug("AND:        {0:32b}".format(masked_value & eax_masked))
-        self._EAX = masked_value & eax_masked       # merge the two masks into one new updated register
+        self._EAX.high = value
         LOG.debug("AH is now {}".format(self.AH))
 
     @property
     def AL(self):
-        return self._EAX & 0xff
+        return self._EAX.low
 
     @AL.setter
     def AL(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EAX = (self._EAX | 0x000000ff) & ((value & 0xff) | 0xffffff00)
+        self._EAX.low = value
         LOG.debug("AL is now {}".format(self.AL))
 
 
@@ -224,51 +231,38 @@ class PySM_Core(object):
         """ base register (32Bit)
         used in indexed addressing
         """
-        return self._EBX & 0xffffffff
+        return self._EBX.full
 
     @EBX.setter
     def EBX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EBX = value & 0xffffffff
+        self._EBX.full = value
         LOG.debug("EBX is now {}".format(self.EBX))
 
     @property
     def BX(self):
-        return self._EBX & 0xffff
+        return self._EBX.half
 
     @BX.setter
     def BX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EBX = (self._EBX | 0x0000ffff) & ((value & 0xffff) | 0xffff0000)
+        self._EBX.half = value
         LOG.debug("BX is now {}".format(self.BX))
 
     @property
     def BH(self):
-        return (self._EBX & 0xff00) >> 8
+        return self._EBX.high
 
     @BH.setter
     def BH(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        limited_value = value & 0xff  # limit the value to 8 bits
-        shifted_value = limited_value << 8  # shift those bits to the right position
-        masked_value = shifted_value | 0xffff00ff  # mask the bits we don't want to update
-
-        masked = self._EBX | 0x0000ff00  # mask out the bits we want to update
-        self._EBX = masked_value & masked  # merge the two masks into one new updated register
+        self._EBX.high = value
         LOG.debug("BH is now {}".format(self.BH))
 
     @property
     def BL(self):
-        return self._EBX & 0xff
+        return self._EBX.low
 
     @BL.setter
     def BL(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EBX = (self._EBX | 0x000000ff) & ((value & 0xff) | 0xffffff00)
+        self._EBX.low = value
         LOG.debug("BL is now {}".format(self.BL))
 
 
@@ -277,51 +271,38 @@ class PySM_Core(object):
         """ count register (32Bit)
         stores the loop count in iterative operations
         """
-        return self._ECX & 0xffffffff
+        return self._ECX.full
 
     @ECX.setter
     def ECX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._ECX = value & 0xffffffff
+        self._ECX.full = value
         LOG.debug("ECX is now {}".format(self.ECX))
 
     @property
     def CX(self):
-        return self._ECX & 0xffff
+        return self._ECX.half
 
     @CX.setter
     def CX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._ECX = (self._ECX | 0x0000ffff) & ((value & 0xffff) | 0xffff0000)
+        self._ECX.half = value
         LOG.debug("CX is now {}".format(self.CX))
 
     @property
     def CH(self):
-        return (self._ECX & 0xff00) >> 8
+        return self._ECX.high
 
     @CH.setter
     def CH(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        limited_value = value & 0xff  # limit the value to 8 bits
-        shifted_value = limited_value << 8  # shift those bits to the right position
-        masked_value = shifted_value | 0xffff00ff  # mask the bits we don't want to update
-
-        masked = self._ECX | 0x0000ff00  # mask out the bits we want to update
-        self._ECX = masked_value & masked  # merge the two masks into one new updated register
+        self._ECX.high = value
         LOG.debug("CH is now {}".format(self.CH))
 
     @property
     def CL(self):
-        return self._ECX & 0xff
+        return self._ECX.low
 
     @CL.setter
     def CL(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._ECX = (self._ECX | 0x000000ff) & ((value & 0xff) | 0xffffff00)
+        self._ECX.low = value
         LOG.debug("CL is now {}".format(self.CL))
 
 
@@ -331,49 +312,36 @@ class PySM_Core(object):
         It is also used in input/output operations.
         It is also used with AX register along with DX for multiply and divide operations involving large values.
         """
-        return self._EDX & 0xffffffff
+        return self._EDX.full
 
     @EDX.setter
     def EDX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EDX = value & 0xffffffff
+        self._EDX.full = value
         LOG.debug("EDX is now {}".format(self.EDX))
 
     @property
     def DX(self):
-        return self._EDX & 0xffff
+        return self._EDX.half
 
     @DX.setter
     def DX(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EDX = (self._EDX | 0x0000ffff) & ((value & 0xffff) | 0xffff0000)
+        self._EDX.half = value
         LOG.debug("DX is now {}".format(self.DX))
 
     @property
     def DH(self):
-        return (self._EDX & 0xff00) >> 8
+        return self._EDX.high
 
     @DH.setter
     def DH(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        limited_value = value & 0xff  # limit the value to 8 bits
-        shifted_value = limited_value << 8  # shift those bits to the right position
-        masked_value = shifted_value | 0xffff00ff  # mask the bits we don't want to update
-
-        masked = self._EDX | 0x0000ff00  # mask out the bits we want to update
-        self._EDX = masked_value & masked  # merge the two masks into one new updated register
+        self._EDX.high = value
         LOG.debug("DH is now {}".format(self.DH))
 
     @property
     def DL(self):
-        return self._EDX & 0xff
+        return self._EDX.low
 
     @DL.setter
     def DL(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Registers can only take integers")
-        self._EDX = (self._EDX | 0x000000ff) & ((value & 0xff) | 0xffffff00)
+        self._EDX.low = value
         LOG.debug("DL is now {}".format(self.DL))
