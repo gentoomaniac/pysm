@@ -7,9 +7,7 @@ class Register(object):
 
     @property
     def full(self):
-        """ primary accumulator (32Bit)
-        it is used in input/output and most arithmetic instructions. For example, in multiplication operation,
-        one operand is stored in EAX or AX or AL register according to the size of the operand
+        """ returns full register
         """
         return  self.__value & 0xffffffff
 
@@ -21,6 +19,8 @@ class Register(object):
 
     @property
     def half(self):
+        """ returns lowest 16 bit
+        """
         return  self.__value & 0xffff
 
     @half.setter
@@ -31,6 +31,8 @@ class Register(object):
 
     @property
     def high(self):
+        """ returns highest 8 bit of the lower 16 bit
+        """
         return ( self.__value & 0xff00) >> 8
 
     @high.setter
@@ -46,6 +48,8 @@ class Register(object):
 
     @property
     def low(self):
+        """ returns lowest 8 bit of the register
+        """
         return  self.__value & 0xff
 
     @low.setter
