@@ -3,6 +3,7 @@ import logging
 
 from unittest import TestCase
 
+import stdlib
 from core import PySM_Core
 import datatypes.exceptions as exceptions
 
@@ -37,54 +38,40 @@ class TestPySM_Core(TestCase):
         for l in core.dump_memory():
             LOG.debug(l)
 
-    def test_add_ptr(self):
-        LOG.debug("Testing malloc() ...")
+    def test_set_mem_range(self):
+        LOG.debug("Testing set_memory_range() ...")
+
         core = PySM_Core()
+        mem_locations = {}
 
-        ptr_name = "ptr_1"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(16))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x00)
+        for i in range(6):
+            ptr_name = "ptr_{}".format(i)
+            msg = [ord(c) for c in "Hello World #{}!".format(i)]
+            msg.append(0x00)
 
-        ptr_name = "ptr_2"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(16))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x10)
+            mem_locations[ptr_name] = stdlib.malloc(len(msg))
+            core.set_memory_range(mem_locations[ptr_name], msg)
+            for l in core.dump_memory(limit=0x0006):
+                LOG.debug(l)
 
-        ptr_name = "ptr_3"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(16))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x20)
-
-        ptr_name = "ptr_4"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(16))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x30)
-
-        ptr_name = "ptr_5"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(16))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x40)
-
-        ptr_name = 'ptr_2'
-        core.free(core.get_pointer_value(ptr_name))
-        core.delete_pointer(ptr_name)
-
-        ptr_name = "ptr_1_n"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(7))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x10)
-
-        ptr_name = "ptr_2_n"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(6))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x17)
-
-        ptr_name = "ptr_3_n"
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(6))
-        self.assertEqual(core.get_pointer_value(ptr_name), 0x50)
+        stdlib.free(mem_locations.pop('ptr_2'))
         for l in core.dump_memory(limit=0x0006):
+            LOG.debug(l)
+
+        ptr_name = "ptr_{}_n".format(1)
+        msg = [ord(c) for c in "Hello!".upper()]
+        msg.append(0x00)
+        mem_locations[ptr_name] = stdlib.malloc(len(msg))
+        core.set_memory_range(mem_locations[ptr_name], msg)
+        for l in core.dump_memory(limit=0x0006):
+            LOG.debug(l)
+
+        ptr_name = "ptr_{}_n".format(2)
+        msg = [ord(c) for c in "World!123".format(i).upper()]
+        msg.append(0x00)
+        mem_locations[ptr_name] = stdlib.malloc(len(msg))
+        core.set_memory_range(mem_locations[ptr_name], msg)
+        for l in core.dump_memory(limit=0x007):
             LOG.debug(l)
 
     def test_inc(self):
@@ -126,47 +113,3 @@ class TestPySM_Core(TestCase):
 
         core.mov("CH", "EAX")
         self.assertEqual(core.CH, 0xff)
-
-    def test_set_mem_range(self):
-        LOG.debug("Testing set_memory_range() ...")
-        core = PySM_Core()
-
-        for i in range(6):
-            ptr_name = "ptr_{}".format(i)
-            msg = [ord(c) for c in "Hello World #{}!".format(i)]
-            msg.append(0x00)
-
-            core.add_pointer(ptr_name)
-            core.set_pointer_value(ptr_name, core.malloc(len(msg)))
-            core.set_memory_range(core.get_pointer_value(ptr_name), msg)
-            for l in core.dump_memory(limit=0x0006):
-                LOG.debug(l)
-
-        ptr_name = 'ptr_2'
-        core.free(core.get_pointer_value(ptr_name))
-        core.delete_pointer(ptr_name)
-        for l in core.dump_memory(limit=0x0006):
-            LOG.debug(l)
-
-        ptr_name = "ptr_{}_n".format(1)
-        msg = [ord(c) for c in "Hello!".upper()]
-        msg.append(0x00)
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(len(msg)))
-        core.set_memory_range(core.get_pointer_value(ptr_name), msg)
-        for l in core.dump_memory(limit=0x0006):
-            LOG.debug(l)
-
-        ptr_name = "ptr_{}_n".format(2)
-        msg = [ord(c) for c in "World!123".format(i).upper()]
-        msg.append(0x00)
-        core.add_pointer(ptr_name)
-        core.set_pointer_value(ptr_name, core.malloc(len(msg)))
-        core.set_memory_range(core.get_pointer_value(ptr_name), msg)
-        for l in core.dump_memory(limit=0x007):
-            LOG.debug(l)
-
-            # for i in range(10):
-            #     ptr_name = "ptr_{}".format(i)
-            #     core.free(core.get_pointer_value(ptr_name))
-            #     core.delete_pointer(ptr_name)

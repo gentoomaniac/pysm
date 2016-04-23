@@ -1,4 +1,3 @@
-import collections
 import json
 import logging
 import string
@@ -40,8 +39,6 @@ class PySM_Core(object):
         self._EFLAGS = 0    # Flags register
 
         # some management tables
-        self._memtab = {}
-        self._pointer = {}
 
     def inc(self, target):
         if hasattr(self, target.upper()):
@@ -83,47 +80,8 @@ class PySM_Core(object):
             except exceptions.CarryOverException:
                 self._EFLAGS |= 0x01
 
-
-    # need to move to the interpreter
-    def add_pointer(self, name, value=0x00):
-        if name in self._pointer:
-            raise ValueError("{} already exists".format(name))
-        LOG.debug("Adding new pointer '{}' with value {:04X}".format(name, value))
-        self._pointer[name] = value & 0xffff
-        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
-
-    def delete_pointer(self, name):
-        if name in self._pointer:
-            LOG.debug("Removed pointer '{}' with value {:04X}".format(name, self._pointer[name]))
-            self._pointer.pop(name)
-        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
-
-    def get_pointer_value(self, name):
-            return self._pointer.get(name, None)
-
-    def set_pointer_value(self, name, value):
-        if name not in self._pointer:
-            raise ValueError("{} does not exist".format(name))
-        self._pointer[name] = value & 0xffff
-
     """ Memory operations start here
     """
-
-    def malloc(self, size):
-        address = self._mallof_find_free(size)
-        if address is None:
-            raise Exception("Couldn't allocate memory")
-
-        self._memtab[address] = address + size - 1
-        LOG.debug("Allocated {} bytes at address {:04X}".format(size, address))
-        LOG.debug("Memory allocation table: {}".format(json.dumps(self._memtab, sort_keys=True)))
-        return address
-
-    def free(self, address):
-        if address in self._memtab:
-            LOG.debug("Freed {} bytes at address {:04X}".format(address, address))
-            self._memtab.pop(address)
-        LOG.debug("Memory allocation table: {}".format(json.dumps(self._memtab, sort_keys=True)))
 
     def set_memory_range(self, address, values):
         for v in values:
@@ -170,33 +128,6 @@ class PySM_Core(object):
 
         return result
 
-    def _mallof_find_free(self, size):
-        last_addr = 0x00
-        current_addr = None
-        is_end = True
-
-        # transform dict to flat list
-        memtab = collections.OrderedDict(sorted(self._memtab.items())).items()
-        memtab = [i for s in memtab for i in s]
-
-        # no memory reserved
-        if not memtab:
-            return 0x00
-
-        # check the amount of from the ending of the last block to the next block
-        for addr in memtab:
-            is_end = not is_end
-            current_addr = addr
-            if not is_end:
-                if (addr - last_addr) > size:
-                    return last_addr + 1
-
-            last_addr = addr
-
-        if is_end and (0xffff - current_addr > size):
-            return current_addr + 1
-
-        return None
 
     """ Register operations start here
     """

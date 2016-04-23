@@ -1,4 +1,8 @@
+import json
 import logging
+
+
+import stdlib
 
 from core import PySM_Core
 
@@ -16,6 +20,8 @@ class Interpreter(object):
 
         self._core = PySM_Core()
 
+        self._pointer = {}
+
     def run(self):
         LOG.debug("Interpreting {} instructions".format(len(self._instructions)))
         for i in self._instructions:
@@ -32,3 +38,28 @@ class Interpreter(object):
         for row in memdump:
             LOG.debug(row)
 
+
+    # need to move to the interpreter
+    def add_pointer(self, name, value=0x00):
+        if name in self._pointer:
+            raise ValueError("{} already exists".format(name))
+        LOG.debug("Adding new pointer '{}' with value {:04X}".format(name, value))
+        self._pointer[name] = value & 0xffff
+        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
+
+
+    def delete_pointer(self, name):
+        if name in self._pointer:
+            LOG.debug("Removed pointer '{}' with value {:04X}".format(name, self._pointer[name]))
+            self._pointer.pop(name)
+        LOG.debug("Pointer table: {}".format(json.dumps(self._pointer, sort_keys=True)))
+
+
+    def get_pointer_value(self, name):
+        return self._pointer.get(name, None)
+
+
+    def set_pointer_value(self, name, value):
+        if name not in self._pointer:
+            raise ValueError("{} does not exist".format(name))
+        self._pointer[name] = value & 0xffff
