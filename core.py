@@ -45,8 +45,27 @@ class PySM_Core(object):
 
         # some management tables
         self._opcodes = {
-
+            0x04: self.sys_write
         }
+
+    def sys_write(self):
+        LOG.debug("Printing to screen ...")
+        msg_addr = self.ECX
+        msg_len = self.EDX
+        msg_target = self.EBX
+
+        if msg_target == 1:
+            fn = print
+        elif msg_target == 2:
+            fn = LOG.error
+        else:
+            raise ValueError("sys_write() can only write to stdout or stderr")
+
+        msg = self.get_memory_range(msg_addr, msg_len)
+        msg = [chr(c) for c in msg]
+        # LOG.debug("read from memory: {}".format(msg))
+        fn("".join(msg))
+
 
     def push(self, src):
         if isinstance(src, int):
@@ -147,6 +166,14 @@ class PySM_Core(object):
            raise ValueError("Address must be an integer")
         offset &= 0xffff
         return self._mem[offset]
+
+    def get_memory_range(self, offset, number):
+        result = []
+        while number > 0:
+            result.append(self.get_memory_location(offset))
+            number -= 1
+            offset += 1
+        return result
 
     def dump_memory(self, limit=0xffff):
         result = []

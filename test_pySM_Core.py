@@ -146,3 +146,22 @@ class TestPySM_Core(TestCase):
 
         # LOG.debug("pop() into EDX to provoke exception")
         # self.assertRaises(IndexError, core.pop("EDX"))
+
+    def test_sys_write(self):
+        LOG.debug("Testing sys_write() ...")
+        core = PySM_Core()
+
+        msg = [ord(c) for c in "Hello!"]
+        msg.append(0x00)
+        addr = stdlib.malloc(len(msg))
+        length = len(msg)
+
+        core.set_memory_range(addr, msg)
+
+        core.ECX = addr
+        core.EDX = length
+        core.EBX = 2
+
+        core.sys_write()
+
+        stdlib.free(addr)
