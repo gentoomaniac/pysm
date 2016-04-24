@@ -158,10 +158,11 @@ class TestPySM_Core(TestCase):
 
         core.set_memory_range(addr, msg)
 
+        core.EAX = 4        # sys_write
+        core.EBX = 2        # stderr
         core.ECX = addr
         core.EDX = length
-        core.EBX = 2
 
-        core.sys_write()
+        core.interrupt(0x80)      # handover to core
 
         stdlib.free(addr)

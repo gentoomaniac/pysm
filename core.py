@@ -44,9 +44,17 @@ class PySM_Core(object):
         # https://filippo.io/linux-syscall-table/
 
         # some management tables
-        self._opcodes = {
+        self._syscalls = {
+            0x01: self.sys_exit,
             0x04: self.sys_write
         }
+
+    def interrupt(self, num):
+        if num == 0x80:
+            self._syscalls[self.EAX]()
+
+    def sys_exit(self):
+        LOG.debug("sys_exit() ...")
 
     def sys_write(self):
         LOG.debug("Printing to screen ...")
