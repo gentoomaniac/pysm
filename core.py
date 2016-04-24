@@ -1,11 +1,10 @@
-import json
 import logging
 import string
 
 import datatypes.exceptions as exceptions
 import register as r
 
-from datatypes.word import *
+from datatypes.byte import *
 from datatypes.dword import *
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
@@ -21,24 +20,71 @@ class PySM_Core(object):
         # memory
         self._mem = [int(0)] * (0xffff+1)
 
+        # stack
+        self._stack = [int(0)] * (0xff+1)
+
         # registers
-        self._EAX = r.Register()
-        self._EBX = r.Register()
-        self._ECX = r.Register()
-        self._EDX = r.Register()
+        self._EAX = r.Register32()
+        self._EBX = r.Register32()
+        self._ECX = r.Register32()
+        self._EDX = r.Register32()
 
-        self._EIP = r.Register()
-        self._ESP = r.Register()
-        self._EBP = r.Register()
+        self._EIP = r.Register32()
+        self._ESP = r.Register32()
+        self._EBP = r.Register32()
 
-        self._ESI = r.Register()
-        self._EDI = r.Register()
+        self._ESI = r.Register32()
+        self._EDI = r.Register32()
 
         # special stuff
         self._IP = 0        # instruction pointer
         self._EFLAGS = 0    # Flags register
+        self._stack_pointer = -1
+
+        # https://filippo.io/linux-syscall-table/
 
         # some management tables
+        self._opcodes = {
+
+        }
+
+    def push(self, src):
+        if isinstance(src, int):
+            value = src
+        elif hasattr(self, src.upper()):
+            value = getattr(self, src.upper())
+        else:
+            raise TypeError("Invalid value for push()")
+
+        LOG.debug("Pushing {:08X} to stack".format(value))
+        try:
+            self._stack[self._stack_pointer + 1] = value & 0xffffffff
+        except:
+            raise OverflowError("Stack Overflow")
+
+        self._stack_pointer += 1
+
+    def pop(self, target=None):
+        if self._stack_pointer < 0:
+            raise IndexError("Stack is empty")
+
+        value = self._stack[self._stack_pointer]
+
+        if target is None:
+            pass
+        elif hasattr(self, target.upper()):
+            setattr(self, target.upper(), value)
+        else:
+            raise TypeError("Invalid target for pop()")
+
+        self._stack_pointer -= 1
+
+    def dump_stack(self):
+        count = 0
+        LOG.debug("Stack dump:")
+        while count <= self._stack_pointer:
+            LOG.debug("{:02X}h {:8X}".format(count, self._stack[count]))
+            count += 1
 
     def inc(self, target):
         if hasattr(self, target.upper()):
@@ -76,7 +122,7 @@ class PySM_Core(object):
 
         if isinstance(target, str):
             try:
-                setattr(self, target.upper(), value )
+                setattr(self, target.upper(), value)
             except exceptions.CarryOverException:
                 self._EFLAGS |= 0x01
 

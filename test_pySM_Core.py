@@ -113,3 +113,36 @@ class TestPySM_Core(TestCase):
 
         core.mov("CH", "EAX")
         self.assertEqual(core.CH, 0xff)
+
+    def test_push_pop(self):
+        LOG.debug("Testing stack functions ...")
+        core = PySM_Core()
+
+        core.dump_stack()
+
+        LOG.debug("Pushing 0xff from EBX to stack")
+        core.EBX = 0xff
+        core.push("EBX")
+        core.dump_stack()
+
+        LOG.debug("Pushing 0xf0 as integer to stack")
+        core.push(0xf0)
+        core.dump_stack()
+
+        LOG.debug("pop() into EAX")
+        core.pop("EAX")
+        self.assertEqual(core.EAX, 0xf0)
+        core.dump_stack()
+
+        LOG.debug("pop() into ECX")
+        core.pop("ECX")
+        self.assertEqual(core.ECX, 0xff)
+        core.dump_stack()
+
+        core.push(0x666)
+        core.dump_stack()
+        core.pop()
+        core.dump_stack()
+
+        # LOG.debug("pop() into EDX to provoke exception")
+        # self.assertRaises(IndexError, core.pop("EDX"))

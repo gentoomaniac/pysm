@@ -1,6 +1,7 @@
 from datatypes.dword import Dword
 
-class Register(object):
+
+class Register32(object):
     """ Base class for all registers
     """
 
