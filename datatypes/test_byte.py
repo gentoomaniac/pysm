@@ -1,3 +1,5 @@
+import sys
+
 from unittest import TestCase
 
 import datatypes.exceptions as exceptions
@@ -27,3 +29,5 @@ class TestByte(TestCase):
         except Exception as e:
             self.assertIsInstance(e, exceptions.CarryOverException)
         self.assertEqual(b.value, 0x0f)
+
+        self.assertEqual(b.size, 8)

@@ -1,3 +1,5 @@
+import stdlib
+
 from datatypes.word import Word
 from datatypes.exceptions import CarryOverException
 
@@ -5,6 +7,10 @@ class Dword(object):
     def __init__(self, value=0x00000000):
         self._high = Word(value & 0xffff0000)
         self._low = Word(value & 0x0000ffff)
+
+    @property
+    def size(self):
+        return stdlib.sizeof(self._high) + stdlib.sizeof(self._low)
 
     @property
     def value(self):

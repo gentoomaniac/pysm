@@ -1,3 +1,5 @@
+import stdlib
+
 from datatypes.byte import Byte
 from datatypes.exceptions import CarryOverException
 
@@ -6,6 +8,10 @@ class Word(object):
     def __init__(self, value=0x0000):
         self._high = Byte(value & 0xff00)
         self._low = Byte(value & 0x00ff)
+
+    @property
+    def size(self):
+        return stdlib.sizeof(self._high) + stdlib.sizeof(self._low)
 
     @property
     def value(self):

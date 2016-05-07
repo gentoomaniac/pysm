@@ -5,6 +5,10 @@ class Byte(object):
         self._data = value & 0xff
 
     @property
+    def size(self):
+        return 8
+
+    @property
     def value(self):
         return self._data
 

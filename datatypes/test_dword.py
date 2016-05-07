@@ -110,3 +110,8 @@ class TestDword(TestCase):
         except Exception as e:
             self.assertIsInstance(e, exceptions.CarryOverException)
         self.assertEqual(w.low.value, 0x000f)
+
+    def test_size(self):
+        LOG.info("Testing size ...")
+        w = Dword()
+        self.assertEqual(w.size, 32)

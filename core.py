@@ -113,6 +113,10 @@ class PySM_Core(object):
             LOG.debug("{:02X}h {:8X}".format(count, self._stack[count]))
             count += 1
 
+    """ CORE commands
+
+        This is all the commands the Core will be able to execute
+    """
     def inc(self, target):
         if hasattr(self, target.upper()):
             LOG.debug("Incrementing register {}".format(target.upper()))
@@ -153,9 +157,9 @@ class PySM_Core(object):
             except exceptions.CarryOverException:
                 self._EFLAGS |= 0x01
 
+
     """ Memory operations start here
     """
-
     def set_memory_range(self, address, values):
         for v in values:
             self.set_memory_location(address, v)
@@ -210,7 +214,7 @@ class PySM_Core(object):
         return result
 
 
-    """ Register operations start here
+    """ Register definitions and operations start here
     """
 
     def dump_registers(self):

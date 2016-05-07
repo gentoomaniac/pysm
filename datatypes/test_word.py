@@ -92,3 +92,8 @@ class TestWord(TestCase):
         except Exception as e:
             self.assertIsInstance(e, exceptions.CarryOverException)
         self.assertEqual(w.low.value, 0x0f)
+
+    def test_size(self):
+        LOG.info("Testing size ...")
+        w = Word()
+        self.assertEqual(w.size, 16)

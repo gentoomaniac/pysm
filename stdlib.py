@@ -56,3 +56,9 @@ def free(address):
         LOG.debug("Freed {} bytes at address {:04X}".format(address, address))
         _memtab.pop(address)
     LOG.debug("Memory allocation table: {}".format(json.dumps(_memtab, sort_keys=True)))
+
+def sizeof(obj):
+    try:
+        return obj.size
+    except:
+        raise AttributeError("Object doesn't have a size")
