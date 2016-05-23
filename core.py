@@ -4,7 +4,6 @@ import string
 import datatypes.exceptions as exceptions
 import register as r
 
-from datatypes.byte import *
 from datatypes.dword import *
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
@@ -150,6 +149,8 @@ class PySM_Core(object):
         elif isinstance(src, int):
             # src is plain integer
             value = src
+        else:
+            raise ValueError()
 
         if isinstance(target, str):
             try:
