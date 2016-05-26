@@ -4,7 +4,7 @@ import logging
 from unittest import TestCase
 
 import stdlib
-from core import PySM_Core
+from core import Core
 import datatypes.exceptions as exceptions
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
@@ -18,7 +18,7 @@ LOG.addHandler(ch)
 class TestPySM_Core(TestCase):
     def test_set_memory_location(self):
         LOG.debug("Testing memory access ...")
-        core = PySM_Core()
+        core = Core()
 
         core.set_memory_location(0, 0)
         self.assertEqual(core.get_memory_location(0), 0)
@@ -41,7 +41,7 @@ class TestPySM_Core(TestCase):
     def test_set_mem_range(self):
         LOG.debug("Testing set_memory_range() ...")
 
-        core = PySM_Core()
+        core = Core()
         mem_locations = {}
 
         for i in range(6):
@@ -76,7 +76,7 @@ class TestPySM_Core(TestCase):
 
     def test_inc(self):
         LOG.debug("Testing inc() ...")
-        core = PySM_Core()
+        core = Core()
 
         core.EAX = 0xffffffff
 
@@ -86,7 +86,7 @@ class TestPySM_Core(TestCase):
 
     def test_dec(self):
         LOG.debug("Testing dec() ...")
-        core = PySM_Core()
+        core = Core()
 
         core.EAX = 0xffffffff
         core.dec("EAX")
@@ -103,7 +103,7 @@ class TestPySM_Core(TestCase):
 
     def test_mov(self):
         LOG.debug("Testing mov() ...")
-        core = PySM_Core()
+        core = Core()
 
         core.mov("EAX", 0xff)
         self.assertEqual(core.EAX, 0xff)
@@ -116,7 +116,7 @@ class TestPySM_Core(TestCase):
 
     def test_push_pop(self):
         LOG.debug("Testing stack functions ...")
-        core = PySM_Core()
+        core = Core()
 
         core.dump_stack()
 
@@ -149,7 +149,7 @@ class TestPySM_Core(TestCase):
 
     def test_sys_write(self):
         LOG.debug("Testing sys_write() ...")
-        core = PySM_Core()
+        core = Core()
 
         msg = [ord(c) for c in "Hello!"]
         msg.append(0x00)

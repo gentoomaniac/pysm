@@ -14,7 +14,7 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
-class PySM_Core(object):
+class Core(object):
 
     def __init__(self):
         # memory
@@ -75,6 +75,8 @@ class PySM_Core(object):
         fn("".join(msg))
 
 
+    """ Stack
+    """
     def push(self, src):
         if isinstance(src, int):
             value = src

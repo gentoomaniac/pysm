@@ -19,7 +19,7 @@ Some random writes to memory
 5. free memory
 ```python
 LOG.debug("Testing sys_write() ...")
-core = PySM_Core()
+core = Core()
 
 msg = [ord(c) for c in "Hello!"]
 msg.append(0x00)

@@ -4,7 +4,7 @@ import logging
 
 import stdlib
 
-from core import PySM_Core
+from core import Core
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('interpreter')
@@ -18,7 +18,7 @@ class Interpreter(object):
     def __init__(self, instructions):
         self._instructions = instructions
 
-        self._core = PySM_Core()
+        self._core = Core()
 
         self._pointer = {}
 

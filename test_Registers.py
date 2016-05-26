@@ -3,7 +3,7 @@ import logging
 
 from unittest import TestCase
 
-from core import PySM_Core
+from core import Core
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('t_registers')
@@ -18,7 +18,7 @@ class TestRegisters(TestCase):
     def test_EAX(self):
         LOG.debug("Testing EAX registers ...")
 
-        core = PySM_Core()
+        core = Core()
 
         self.assertEqual(core.EAX, 0)
 
@@ -62,7 +62,7 @@ class TestRegisters(TestCase):
     def test_EBX(self):
         LOG.debug("Testing EBX registers ...")
 
-        core = PySM_Core()
+        core = Core()
 
         self.assertEqual(core.EBX, 0)
 
@@ -106,7 +106,7 @@ class TestRegisters(TestCase):
     def test_ECX(self):
         LOG.debug("Testing ECX registers ...")
 
-        core = PySM_Core()
+        core = Core()
 
         self.assertEqual(core.ECX, 0)
 
@@ -150,7 +150,7 @@ class TestRegisters(TestCase):
     def test_EDX(self):
         LOG.debug("Testing EDX registers ...")
 
-        core = PySM_Core()
+        core = Core()
 
         self.assertEqual(core.EDX, 0)
 
