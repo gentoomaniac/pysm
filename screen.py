@@ -76,6 +76,7 @@ class ScreenEGA(QMainWindow):
         internal_dimension_y = ScreenEGA.screen_height*scale
         self._screen_scale = scale
         self._screen_buffer = QImage(internal_dimension_x, internal_dimension_y, QImage.Format_RGB16)
+        self.cls()
 
         self.resize(internal_dimension_x, internal_dimension_y)
         self.setWindowTitle('Screen')
@@ -99,6 +100,9 @@ class ScreenEGA(QMainWindow):
     def update_screen(self):
         self._label.setPixmap(QPixmap.fromImage(self._screen_buffer))
         self.repaint()
+
+    def cls(self):
+        self._screen_buffer.fill(ScreenEGA.color_palette[0])
 
     def setPixel(self, x, y, color_index):
         """ Set the pixel at the given position to the specified color
@@ -168,8 +172,10 @@ class TestVideo(QThread):
         c = 0
         for y in range(0, 25):
             for x in range(0, 40):
+                self._screen.cls()
                 self._screen.setCharacter(c, x, y, 10)
                 c = 0 if c >= len(ascii_dos)-1 else c+1
+                time.sleep(0.5)
 
 
 def main():
