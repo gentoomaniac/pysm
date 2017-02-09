@@ -1,11 +1,11 @@
 import sys
 import time
-import _thread
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
 from PyQt5.QtGui import QPixmap, QImage, qRgb
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QPoint
 
+from characters import ascii_dos
 
 class PixelIndexError(Exception):
     def __init__(self):
@@ -14,6 +14,15 @@ class PixelIndexError(Exception):
 class PixelColorError(Exception):
     def __init__(self):
         super().__init__()
+
+class CharacterIndexError(Exception):
+    def __init__(self):
+        super().__init__()
+
+class AsciiIndexError(Exception):
+    def __init__(self):
+        super().__init__()
+
 
 class VideoClock(QThread):
     updated_screen_buffer = pyqtSignal()
@@ -57,6 +66,9 @@ class ScreenEGA(QMainWindow):
 
     screen_width = 320
     screen_height = 200
+
+    character_cell_width = 8
+    character_cell_height = 8
 
     def __init__(self, scale=3):
         super().__init__()
@@ -112,7 +124,21 @@ class ScreenEGA(QMainWindow):
             for _y in range(0, self._screen_scale):
                 self._screen_buffer.setPixel(QPoint(real_x+_x, real_y+_y), color)
 
+    def setCharacter(self, c, x, y, color):
+        if c < 0 or c > 254:
+            raise AsciiIndexError()
+        if x < 0 or x >= ScreenEGA.screen_width/ScreenEGA.character_cell_width:
+            raise CharacterIndexError()
+        if y < 0 or y >= ScreenEGA.screen_height/ScreenEGA.character_cell_height:
+            raise CharacterIndexError()
 
+        real_x = x*ScreenEGA.character_cell_width
+        real_y = y*ScreenEGA.character_cell_height
+
+        for xp in range(0, ScreenEGA.character_cell_width):
+            for yp in range(0, ScreenEGA.character_cell_height):
+                if ascii_dos[c][yp][xp]:
+                    self.setPixel(real_x+xp, real_y+yp, color)
 
 class TestVideo(QThread):
     def __init__(self, screen):
@@ -123,14 +149,19 @@ class TestVideo(QThread):
         self.wait()
 
     def run(self):
-        color = 0
-        for y in range(0,199):
-            for x in range(0,319):
-                self._screen.setPixel(x, y, color)
-                if color >= 15:
-                    color = 0
-                else:
-                    color = color + 1
+        #color = 0
+        #for y in range(0,199):
+        #    for x in range(0,319):
+        #        self._screen.setPixel(x, y, color)
+        #        if color >= 15:
+        #            color = 0
+        #        else:
+        #            color = color + 1
+        for x in range(0,40):
+            for y in range(0,25):
+                self._screen.setCharacter(1, x, y, 10)
+
+
 def main():
     app = QApplication(sys.argv)
     screen = ScreenEGA(scale=3)
