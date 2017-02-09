@@ -140,6 +140,7 @@ class ScreenEGA(QMainWindow):
                 if ascii_dos[c][yp][xp]:
                     self.setPixel(real_x+xp, real_y+yp, color)
 
+
 class TestVideo(QThread):
     def __init__(self, screen):
         super().__init__()
@@ -157,14 +158,23 @@ class TestVideo(QThread):
         #            color = 0
         #        else:
         #            color = color + 1
-        for x in range(0,40):
-            for y in range(0,25):
-                self._screen.setCharacter(1, x, y, 10)
+
+        #c = 1
+        #for x in range(0,40):
+        #    for y in range(0,25):
+        #        self._screen.setCharacter(c, x, y, 10)
+        #        c = 1 if c == 2 else 2
+
+        c = 0
+        for y in range(0, 25):
+            for x in range(0, 40):
+                self._screen.setCharacter(c, x, y, 10)
+                c = 0 if c >= len(ascii_dos)-1 else c+1
 
 
 def main():
     app = QApplication(sys.argv)
-    screen = ScreenEGA(scale=3)
+    screen = ScreenEGA(scale=4)
     screen.show()
     t = TestVideo(screen)
     t.start()
