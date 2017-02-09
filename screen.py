@@ -4,7 +4,7 @@ import _thread
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
 from PyQt5.QtGui import QPixmap, QImage, qRgb
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QPoint
 
 
 class VideoClock(QThread):
@@ -21,13 +21,13 @@ class VideoClock(QThread):
     def run(self):
         while self._run:
             self.updated_screen_buffer.emit()
-            time.sleep(1)
+            time.sleep(self._clock_frequency)
 
     def stop(self):
         self._run = False
 
 
-class ScreenVGA(QMainWindow):
+class ScreenEGA(QMainWindow):
 
     def __init__(self):
         super().__init__()
@@ -67,17 +67,12 @@ class TestVideo(QThread):
 
     def run(self):
         time.sleep(1)
-        self._screen._screen_buffer.fill(qRgb(0, 255, 255))
-        time.sleep(1)
-        self._screen._screen_buffer.fill(qRgb(255, 0, 255))
-        time.sleep(1)
-        self._screen._screen_buffer.fill(qRgb(255, 255, 0))
-        time.sleep(1)
-        self._screen._screen_buffer.fill(qRgb(0, 255, 255))
-
+        for y in range(0,255):
+            for x in range(0,255):
+                self._screen._screen_buffer.setPixel(QPoint(x, y), qRgb(x, y, 255))
 def main():
     app = QApplication(sys.argv)
-    screen = ScreenVGA()
+    screen = ScreenEGA()
     screen.show()
     t = TestVideo(screen)
     t.start()
