@@ -170,12 +170,14 @@ class TestVideo(QThread):
         #        c = 1 if c == 2 else 2
 
         c = 0
+        color = 1
         for y in range(0, 25):
             for x in range(0, 40):
-                self._screen.cls()
-                self._screen.setCharacter(c, x, y, 10)
+        #        self._screen.cls()
+                self._screen.setCharacter(c, x, y, color)
                 c = 0 if c >= len(ascii_dos)-1 else c+1
-                time.sleep(0.5)
+                color = 1 if color >= 15 else color+1
+        #        time.sleep(0.5)
 
 
 def main():
