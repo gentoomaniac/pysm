@@ -154,7 +154,7 @@ class ScreenEGA(QMainWindow):
                 x1, y1 = b
                 x2, y2 = a
 
-            for xi in range(y1, y2):
+            for xi in range(y1, y2+1):
                 self.setPixel(x1, xi, color)
             return
 
@@ -167,11 +167,9 @@ class ScreenEGA(QMainWindow):
             x2, y2 = a
 
         slope = round((y2 - y1) / (x2 - x1), 2)   # slope per pixel
-        print(slope)
 
         x_current, y_current = x1, y1
         for xi in range(x1, x2):
-            print(xi)
             y_new = y_current + slope
             if slope <= 1 and slope >= -1:
                 try:
@@ -223,15 +221,25 @@ class TestVideo(QThread):
         #        color = 1 if color >= 15 else color+1
         ##        time.sleep(0.5)
 
-        self._screen.drawLine((10, 10), (100, 30), 5)
-        self._screen.drawLine((20, 20), (20, 100), 6)
-        self._screen.drawLine((30, 30), (35, 50), 7)
-        self._screen.drawLine((70, 120), (65, 199), 8)
+        #self._screen.drawLine((10, 10), (100, 30), 5)
+        #self._screen.drawLine((20, 20), (20, 100), 6)
+        #self._screen.drawLine((30, 30), (35, 50), 7)
+        #self._screen.drawLine((70, 120), (65, 199), 8)
+        #self._screen.drawLine((90, 120), (100, 120), 9)
+        x = 0
+        color = 1
+        for y in range(0, 100):
+            self._screen.drawLine((x, y), (319-x, y), color)
+            self._screen.drawLine((x, 199-y), (319 - x, 199-y), color)
+            self._screen.drawLine((x, y), (x, 199-y), color)
+            self._screen.drawLine((319-x, y), (319 - x, 199-y), color)
+            x = x+1
+            color = 1 if color >= 15 else color + 1
 
 
 def main():
     app = QApplication(sys.argv)
-    screen = ScreenEGA(scale=4)
+    screen = ScreenEGA(scale=3)
     screen.show()
     t = TestVideo(screen)
     t.start()
