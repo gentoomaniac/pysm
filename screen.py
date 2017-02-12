@@ -144,6 +144,50 @@ class ScreenEGA(QMainWindow):
                 if ascii_dos[c][yp][xp]:
                     self.setPixel(real_x+xp, real_y+yp, color)
 
+    def drawLine(self, a, b, color):
+        # special case: vertical line
+        if a[0] == b[0]:
+            if a[1] < b[1]:
+                x1, y1 = a
+                x2, y2 = b
+            else:
+                x1, y1 = b
+                x2, y2 = a
+
+            for xi in range(y1, y2):
+                self.setPixel(x1, xi, color)
+            return
+
+
+        if a[0] < b[0]:
+            x1, y1 = a
+            x2, y2 = b
+        else:
+            x1, y1 = b
+            x2, y2 = a
+
+        slope = round((y2 - y1) / (x2 - x1), 2)   # slope per pixel
+        print(slope)
+
+        x_current, y_current = x1, y1
+        for xi in range(x1, x2):
+            print(xi)
+            y_new = y_current + slope
+            if slope <= 1 and slope >= -1:
+                try:
+                    self.setPixel(xi, round(y_new), color)
+                except PixelIndexError:
+                    continue
+            else:
+
+                for yi in range(round(y_current), round(y_current+abs(slope))):
+                    try:
+                        self.setPixel(xi, round(yi), color)
+                    except PixelIndexError:
+                        continue
+
+            x_current, y_current = xi, y_new
+
 
 class TestVideo(QThread):
     def __init__(self, screen):
@@ -169,15 +213,20 @@ class TestVideo(QThread):
         #        self._screen.setCharacter(c, x, y, 10)
         #        c = 1 if c == 2 else 2
 
-        c = 0
-        color = 1
-        for y in range(0, 25):
-            for x in range(0, 40):
-        #        self._screen.cls()
-                self._screen.setCharacter(c, x, y, color)
-                c = 0 if c >= len(ascii_dos)-1 else c+1
-                color = 1 if color >= 15 else color+1
-        #        time.sleep(0.5)
+        #c = 0
+        #color = 1
+        #for y in range(0, 25):
+        #    for x in range(0, 40):
+        ##        self._screen.cls()
+        #        self._screen.setCharacter(c, x, y, color)
+        #        c = 0 if c >= len(ascii_dos)-1 else c+1
+        #        color = 1 if color >= 15 else color+1
+        ##        time.sleep(0.5)
+
+        self._screen.drawLine((10, 10), (100, 30), 5)
+        self._screen.drawLine((20, 20), (20, 100), 6)
+        self._screen.drawLine((30, 30), (35, 50), 7)
+        self._screen.drawLine((70, 120), (65, 199), 8)
 
 
 def main():
