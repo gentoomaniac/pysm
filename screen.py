@@ -144,22 +144,31 @@ class ScreenEGA(QMainWindow):
                 if ascii_dos[c][yp][xp]:
                     self.setPixel(real_x+xp, real_y+yp, color)
 
-    def drawFunction(self, func, color, start=0, end=319, offset=0):
+
+    def drawRelation(self, func, color, start=0, end=319, offset=0):
         for x in range(start, end+1):
             ret = func(x)
-            if isinstance(ret, float) or isinstance(ret, int):
-                y_values = [ret]
-            else:
-                y_values = ret
 
-            for y in y_values:
+            for y in ret:
                 try:
                     self.setPixel(x, round(y+offset), color)
                 except PixelIndexError:
-                    continue
+                    pass
+
+
+    def drawFunction(self, func, color, start=0, end=319, offset=0):
+        for x in range(start, end+1):
+            y = func(x) + offset
+            y_next = func(x+1) + offset
+
+            try:
+                self.drawLine((x, y), (x+1, y_next), color)
+            except PixelIndexError:
+                pass
+
 
     def drawSquare(self, p, width, height, color):
-        self.drawFunction(lambda x: range(p[1], p[1]+height), color, start=p[0], end=p[0]+width)
+        self.drawRelation(lambda x: range(p[1], p[1]+height), color, start=p[0], end=p[0]+width)
 
     def drawLine(self, a, b, color):
         # special case: vertical line
@@ -171,7 +180,7 @@ class ScreenEGA(QMainWindow):
                 x1, y1 = b
                 x2, y2 = a
 
-            self.drawFunction(lambda x: range(y1, y2+1), color, start=x1, end=x2)
+            self.drawRelation(lambda x: range(y1, y2+1), color, start=x1, end=x2)
             return
 
 
@@ -186,7 +195,7 @@ class ScreenEGA(QMainWindow):
 
         #self.drawFunction(lambda x: range(y1, y2 + 1), color, start=x1, end=x2)
         x_current, y_current = x1, y1
-        for xi in range(x1, x2):
+        for xi in range(x1, x2+1):
             y_new = y_current + slope
             if slope <= 1 and slope >= -1:
                 try:
@@ -194,7 +203,7 @@ class ScreenEGA(QMainWindow):
                 except PixelIndexError:
                     continue
             else:
-                for yi in range(round(y_current), round(y_current+abs(slope))):
+                for yi in range(round(y_current), round(y_current+abs(slope))+1):
                     try:
                         self.setPixel(xi, round(yi), color)
                     except PixelIndexError:
@@ -231,32 +240,47 @@ class TestVideo(QThread):
         #color = 1
         #for y in range(0, 25):
         #    for x in range(0, 40):
-        ##        self._screen.cls()
+        #        self._screen.cls()
         #        self._screen.setCharacter(c, x, y, color)
         #        c = 0 if c >= len(ascii_dos)-1 else c+1
         #        color = 1 if color >= 15 else color+1
-        ##        time.sleep(0.5)
+        #        time.sleep(0.5)
 
-        #self._screen.drawLine((10, 10), (100, 30), 5)
+        #self._screen.drawLine((10, 10), (12, 100), 5)
         #self._screen.drawLine((20, 20), (20, 100), 6)
         #self._screen.drawLine((30, 30), (35, 50), 7)
         #self._screen.drawLine((70, 120), (65, 199), 8)
         #self._screen.drawLine((90, 120), (100, 120), 9)
 
-        x = 0
-        color = 1
-        for y in range(0, 100):
-            self._screen.drawLine((x, y), (319-x, y), color)
-            self._screen.drawLine((x, 199-y), (319 - x, 199-y), color)
-            self._screen.drawLine((x, y), (x, 199-y), color)
-            self._screen.drawLine((319-x, y), (319 - x, 199-y), color)
-            x = x+1
-            color = 1 if color >= 15 else color + 1
+        #x = 0
+        #color = 1
+        #for y in range(0, 100):
+        #    self._screen.drawLine((x, y), (319-x, y), color)
+        #    self._screen.drawLine((x, 199-y), (319 - x, 199-y), color)
+        #    self._screen.drawLine((x, y), (x, 199-y), color)
+        #    self._screen.drawLine((319-x, y), (319 - x, 199-y), color)
+        #    x = x+1
+        #    color = 1 if color >= 15 else color + 1
 
         import math
-        self._screen.drawFunction(lambda x: [x/2], 12)
-        self._screen.drawFunction(lambda x: math.sin(x), 11, offset=20)
-        self._screen.drawSquare((30,40), 20, 20, 13)
+        #self._screen.drawFunction(lambda x: [x/2], 12)
+        self._screen.drawFunction(lambda x: math.sin(x/2)*20, 11, offset=20)
+        self._screen.drawFunction(lambda x: math.sin(x/10)*20, 13, offset=40)
+        self._screen.drawFunction(lambda x: math.cos(x/20)*20, 14, offset=100)
+        self._screen.drawFunction(lambda x: math.tan(x/20), 15, offset=100)
+        #self._screen.drawSquare((30, 40), 20, 20, 14)
+
+        #self._screen.drawFunction(lambda x: [(x*x+2*x+5)/100], 12, start=50)
+
+        #color = 11
+        #for x in range(0, 319):
+        #    #self._screen.cls()
+        #    y = math.sin(x)
+        #    try:
+        #        self._screen.setPixel(x, y+100, color)
+        #    except PixelColorError:
+        #        pass
+        #    time.sleep(0.1)
 
 
 
