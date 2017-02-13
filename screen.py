@@ -144,6 +144,23 @@ class ScreenEGA(QMainWindow):
                 if ascii_dos[c][yp][xp]:
                     self.setPixel(real_x+xp, real_y+yp, color)
 
+    def drawFunction(self, func, color, start=0, end=319, offset=0):
+        for x in range(start, end+1):
+            ret = func(x)
+            if isinstance(ret, float) or isinstance(ret, int):
+                y_values = [ret]
+            else:
+                y_values = ret
+
+            for y in y_values:
+                try:
+                    self.setPixel(x, round(y+offset), color)
+                except PixelIndexError:
+                    continue
+
+    def drawSquare(self, p, width, height, color):
+        self.drawFunction(lambda x: range(p[1], p[1]+height), color, start=p[0], end=p[0]+width)
+
     def drawLine(self, a, b, color):
         # special case: vertical line
         if a[0] == b[0]:
@@ -154,8 +171,7 @@ class ScreenEGA(QMainWindow):
                 x1, y1 = b
                 x2, y2 = a
 
-            for xi in range(y1, y2+1):
-                self.setPixel(x1, xi, color)
+            self.drawFunction(lambda x: range(y1, y2+1), color, start=x1, end=x2)
             return
 
 
@@ -168,6 +184,7 @@ class ScreenEGA(QMainWindow):
 
         slope = round((y2 - y1) / (x2 - x1), 2)   # slope per pixel
 
+        #self.drawFunction(lambda x: range(y1, y2 + 1), color, start=x1, end=x2)
         x_current, y_current = x1, y1
         for xi in range(x1, x2):
             y_new = y_current + slope
@@ -177,7 +194,6 @@ class ScreenEGA(QMainWindow):
                 except PixelIndexError:
                     continue
             else:
-
                 for yi in range(round(y_current), round(y_current+abs(slope))):
                     try:
                         self.setPixel(xi, round(yi), color)
@@ -226,6 +242,7 @@ class TestVideo(QThread):
         #self._screen.drawLine((30, 30), (35, 50), 7)
         #self._screen.drawLine((70, 120), (65, 199), 8)
         #self._screen.drawLine((90, 120), (100, 120), 9)
+
         x = 0
         color = 1
         for y in range(0, 100):
@@ -235,6 +252,14 @@ class TestVideo(QThread):
             self._screen.drawLine((319-x, y), (319 - x, 199-y), color)
             x = x+1
             color = 1 if color >= 15 else color + 1
+
+        import math
+        self._screen.drawFunction(lambda x: [x/2], 12)
+        self._screen.drawFunction(lambda x: math.sin(x), 11, offset=20)
+        self._screen.drawSquare((30,40), 20, 20, 13)
+
+
+
 
 
 def main():
