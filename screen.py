@@ -157,13 +157,13 @@ class ScreenEGA(QMainWindow):
                     pass
 
 
-    def drawFunction(self, func, color, start=0, end=319, shift=0):
+    def drawFunction(self, func, color, start=0, end=319, shift=0,offset=0):
         for x in range(start+shift, end+shift+1):
             y = func(x)
             y_next = func(x+1)
 
             try:
-                self.drawLine((x, y), (x+1, y_next), color)
+                self.drawLine((x, y+offset), (x+1, y_next+offset), color)
             except PixelIndexError:
                 pass
 
@@ -181,7 +181,7 @@ class ScreenEGA(QMainWindow):
                 x1, y1 = b
                 x2, y2 = a
 
-            self.drawRelation(lambda x: range(y1, y2+1), color, start=x1, end=x2)
+            self.drawRelation(lambda x: range(round(y1), round(y2)), color, start=x1, end=x2)
             return
 
 
@@ -214,17 +214,23 @@ class ScreenEGA(QMainWindow):
 
 
     def drawCircle(self, p, r, color):
-        print(p, r)
-        for x in range(-r, r+1):
-            print(x)
+        for x in range(-r, r):
             y = math.sqrt(abs(math.pow(r, 2)-math.pow(x, 2)))
+            y_next = math.sqrt(abs(math.pow(r, 2)-math.pow(x+1, 2)))
+
             try:
-                self.setPixel(p[0]+x, p[1]+y, color)
+                if y_next-y >= 1 or y_next-y <= -1:
+                    self.drawLine((p[0]+x, p[1]+y), (p[0]+x, p[1]+y_next), color)
+                else:
+                    self.setPixel(p[0]+x, p[1]+y, color)
             except PixelIndexError:
                 pass
 
             try:
-                self.setPixel(p[0]+x, p[1]-y, color)
+                if y-y_next >= 1 or y-y_next <= -1:
+                    self.drawLine((p[0] + x, p[1] - y_next), (p[0] + x, p[1] - y), color)
+                else:
+                    self.setPixel(p[0]+x, p[1]-y, color)
             except PixelIndexError:
                 pass
 
@@ -298,7 +304,7 @@ class TestVideo(QThread):
         #        pass
         #    time.sleep(0.05)
 
-        self._screen.drawCircle((170,100), 50, 15)
+        self._screen.drawCircle((170,100), 75, 15)
 
 def main():
     app = QApplication(sys.argv)
