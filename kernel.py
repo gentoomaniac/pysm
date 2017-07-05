@@ -19,6 +19,7 @@ class Kernel(metaclass=Singleton):
         self.__memtab = {}
 
     def allocate_memory(self, size):
+        LOG.debug("Memory allocation table: {}".format(json.dumps(self.__memtab, sort_keys=True)))
         address = self.__find_free_memory(size)
         if not address is None:
             self.__memtab[address] = address + size - 1

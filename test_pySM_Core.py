@@ -53,6 +53,7 @@ class TestPySM_Core(TestCase):
             core.set_memory_range(mem_locations[ptr_name], msg)
             for l in core.dump_memory(limit=0x0006):
                 LOG.debug(l)
+            self.assertEqual(mem_locations[ptr_name], i*0x10)
 
         stdlib.free(mem_locations.pop('ptr_2'))
         for l in core.dump_memory(limit=0x0006):
@@ -65,6 +66,7 @@ class TestPySM_Core(TestCase):
         core.set_memory_range(mem_locations[ptr_name], msg)
         for l in core.dump_memory(limit=0x0006):
             LOG.debug(l)
+        self.assertEqual(mem_locations[ptr_name], 0x20)
 
         ptr_name = "ptr_{}_n".format(2)
         msg = [ord(c) for c in "World!123".format(i).upper()]
@@ -73,6 +75,7 @@ class TestPySM_Core(TestCase):
         core.set_memory_range(mem_locations[ptr_name], msg)
         for l in core.dump_memory(limit=0x007):
             LOG.debug(l)
+        self.assertEqual(mem_locations[ptr_name], 0x60)
 
     def test_inc(self):
         LOG.debug("Testing inc() ...")
@@ -153,6 +156,7 @@ class TestPySM_Core(TestCase):
 
         msg = [ord(c) for c in "Hello!"]
         msg.append(0x00)
+        LOG.debug(len(msg))
         addr = stdlib.malloc(len(msg))
         length = len(msg)
 

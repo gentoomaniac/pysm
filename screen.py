@@ -77,7 +77,9 @@ class ScreenEGA(QMainWindow):
         internal_dimension_y = ScreenEGA.screen_height*scale
         self._screen_scale = scale
         self._screen_buffer = QImage(internal_dimension_x, internal_dimension_y, QImage.Format_RGB16)
+        self._screen_dbuffer = QImage(internal_dimension_x, internal_dimension_y, QImage.Format_RGB16)
         self.cls()
+        self.update_screen_buffer()
 
         self.resize(internal_dimension_x, internal_dimension_y)
         self.setWindowTitle('Screen')
@@ -102,8 +104,13 @@ class ScreenEGA(QMainWindow):
         self._label.setPixmap(QPixmap.fromImage(self._screen_buffer))
         self.repaint()
 
+    def update_screen_buffer(self):
+        self._screen_buffer = self._screen_dbuffer.copy(0, 0, 0, 0)
+
+
     def cls(self):
-        self._screen_buffer.fill(ScreenEGA.color_palette[0])
+        self._screen_dbuffer.fill(ScreenEGA.color_palette[0])
+
 
     def setPixel(self, x, y, color_index):
         """ Set the pixel at the given position to the specified color
@@ -127,7 +134,8 @@ class ScreenEGA(QMainWindow):
 
         for _x in range(0, self._screen_scale):
             for _y in range(0, self._screen_scale):
-                self._screen_buffer.setPixel(QPoint(real_x+_x, real_y+_y), color)
+                self._screen_dbuffer.setPixel(QPoint(real_x+_x, real_y+_y), color)
+
 
     def setCharacter(self, c, x, y, color):
         if c < 0 or c > 254:
@@ -163,13 +171,17 @@ class ScreenEGA(QMainWindow):
             y_next = func(x+1)
 
             try:
-                self.drawLine((x, y+offset), (x+1, y_next+offset), color)
+                if y - y_next >= 1 or y - y_next <= -1:
+                    self.drawLine((x, y+offset), (x+1, y_next+offset), color)
+                else:
+                    self.setPixel(x, y+offset, color)
             except PixelIndexError:
                 pass
 
 
     def drawSquare(self, p, width, height, color):
         self.drawRelation(lambda x: range(p[1], p[1]+height), color, start=p[0], end=p[0]+width)
+
 
     def drawLine(self, a, b, color):
         # special case: vertical line
@@ -204,7 +216,7 @@ class ScreenEGA(QMainWindow):
                 except PixelIndexError:
                     continue
             else:
-                for yi in range(round(y_current), round(y_current+abs(slope))+1):
+                for yi in range(round(y_current), round(y_current+abs(slope))):
                     try:
                         self.setPixel(xi, round(yi), color)
                     except PixelIndexError:
@@ -215,14 +227,14 @@ class ScreenEGA(QMainWindow):
 
     def drawCircle(self, p, r, color):
         for x in range(-r, r):
-            y = math.sqrt(abs(math.pow(r, 2)-math.pow(x, 2)))
-            y_next = math.sqrt(abs(math.pow(r, 2)-math.pow(x+1, 2)))
+            y = round(math.sqrt(abs(math.pow(r, 2)-math.pow(x, 2))))
+            y_next = round(math.sqrt(abs(math.pow(r, 2)-math.pow(x+1, 2))))
 
             try:
                 if y_next-y >= 1 or y_next-y <= -1:
-                    self.drawLine((p[0]+x, p[1]+y), (p[0]+x, p[1]+y_next), color)
+                    self.drawLine((p[0] + x, p[1] + y-1), (p[0] + x, p[1] + y_next-1), color)
                 else:
-                    self.setPixel(p[0]+x, p[1]+y, color)
+                    self.setPixel(p[0] + x, p[1] + y-1, color)
             except PixelIndexError:
                 pass
 
@@ -230,7 +242,7 @@ class ScreenEGA(QMainWindow):
                 if y-y_next >= 1 or y-y_next <= -1:
                     self.drawLine((p[0] + x, p[1] - y_next), (p[0] + x, p[1] - y), color)
                 else:
-                    self.setPixel(p[0]+x, p[1]-y, color)
+                    self.setPixel(p[0] + x, p[1] - y, color)
             except PixelIndexError:
                 pass
 
@@ -244,30 +256,30 @@ class TestVideo(QThread):
         self.wait()
 
     def run(self):
-        #color = 0
-        #for y in range(0,199):
-        #    for x in range(0,319):
-        #        self._screen.setPixel(x, y, color)
-        #        if color >= 15:
-        #            color = 0
-        #        else:
-        #            color = color + 1
+#        color = 0
+#        for y in range(0,199):
+#            for x in range(0,319):
+#                self._screen.setPixel(x, y, color)
+#                if color >= 15:
+#                    color = 0
+#                else:
+#                    color = color + 1
 
-        #c = 1
-        #for x in range(0,40):
-        #    for y in range(0,25):
-        #        self._screen.setCharacter(c, x, y, 10)
-        #        c = 1 if c == 2 else 2
+#        c = 1
+#        for x in range(0,40):
+#            for y in range(0,25):
+#                self._screen.setCharacter(c, x, y, 10)
+#                c = 1 if c == 2 else 2
 
-        #c = 0
-        #color = 1
-        #for y in range(0, 25):
-        #    for x in range(0, 40):
-        ##       self._screen.cls()
-        #        self._screen.setCharacter(c, x, y, color)
-        #        c = 0 if c >= len(ascii_dos)-1 else c+1
-        #        color = 1 if color >= 15 else color+1
-        ##        time.sleep(0.5)
+#        c = 0
+#        color = 1
+#        for y in range(0, 25):
+#            for x in range(0, 40):
+        #        self._screen.cls()
+#                self._screen.setCharacter(c, x, y, color)
+#                c = 0 if c >= len(ascii_dos)-1 else c+1
+#                color = 1 if color >= 15 else color+1
+#                time.sleep(0.1)
 
         #self._screen.drawLine((10, 10), (12, 100), 5)
         #self._screen.drawLine((20, 20), (20, 100), 6)
@@ -285,30 +297,41 @@ class TestVideo(QThread):
         #    x = x+1
         #    color = 1 if color >= 15 else color + 1
 
-        import math
-        #self._screen.drawFunction(lambda x: x/2, 12)
-        #self._screen.drawFunction(lambda x: math.sin(x/2)*20, 11, offset=20)
-        #self._screen.drawFunction(lambda x: math.sin(x/10)*20, 13, offset=40)
-        #self._screen.drawFunction(lambda x: math.cos(x/20)*20, 14, offset=100)
-        #self._screen.drawFunction(lambda x: math.tan(x/100)*10, 15, offset=100)
-        #self._screen.drawSquare((30, 40), 20, 20, 14)
+#        self._screen.drawFunction(lambda x: x/2, 12)
+#        self._screen.update_screen_buffer()
+#        self._screen.drawFunction(lambda x: math.sin(x/2)*20, 11, offset=20)
+#        self._screen.update_screen_buffer()
+#        self._screen.drawFunction(lambda x: math.sin(x/10)*20, 13, offset=40)
+#        self._screen.update_screen_buffer()
+#        self._screen.drawFunction(lambda x: math.cos(x/20)*20, 14, offset=100)
+#        self._screen.update_screen_buffer()
+#        self._screen.drawFunction(lambda x: math.tan(x/100)*10, 15, offset=100)
+#        self._screen.update_screen_buffer()
+#        self._screen.drawSquare((30, 40), 20, 20, 14)
+#        self._screen.update_screen_buffer()
 
         #self._screen.drawFunction(lambda x: [(x*x+2*x+5)/100], 12, start=50)
 
-        #color = 11
-        #for xc in range(0, 1000):
-        #    self._screen.cls()
-        #    try:
-        #        self._screen.drawFunction(lambda x: math.sin((x-xc)/20) * 20, 13, offset=100)
-        #    except PixelColorError:
-        #        pass
-        #    time.sleep(0.05)
+        color = 11
+        for xc in range(0, 1000):
+            self._screen.cls()
+            try:
+                self._screen.drawFunction(lambda x: math.sin((x-xc)/20) * 20, 13, offset=100)
+                self._screen.update_screen_buffer()
+            except PixelColorError:
+                pass
+            time.sleep(0.05)
 
-        self._screen.drawCircle((170,100), 75, 15)
+#        import random
+#        for x in range(0, 320):
+#            self._screen.drawCircle((x,random.randint(0, 199)), random.randint(3, 10), random.randint(1, 15))
+#            self._screen.update_screen_buffer()
+
+        #self._screen.drawCircle((100, 100), 3, random.randint(1, 15))
 
 def main():
     app = QApplication(sys.argv)
-    screen = ScreenEGA(scale=3)
+    screen = ScreenEGA(scale=4)
     screen.show()
     t = TestVideo(screen)
     t.start()
