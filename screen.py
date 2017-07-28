@@ -339,13 +339,13 @@ class TestVideo(QThread):
 
         #self._screen.drawCircle((100, 100), 3, random.randint(1, 15))
 
+
 def main():
     app = QApplication(sys.argv)
     screen = ScreenEGA(scale=4)
     screen.show()
     t = TestVideo(screen)
     t.start()
-
 
     sys.exit(app.exec_())
 

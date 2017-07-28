@@ -5,7 +5,6 @@ import datatypes.exceptions as exceptions
 import register as r
 
 from datatypes.dword import *
-from singleton import Singleton
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -15,7 +14,7 @@ ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
 
-class Core(metaclass=Singleton): # This shouldn't be a singleton
+class Core(object):
 
     def __init__(self):
         # memory

@@ -16,16 +16,16 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
+
 class Emulator(QThread):
-    def __init__(self, screen, core):
+    def __init__(self, core, screen):
         super().__init__()
-        self._core = core
-        self._screen = screen
+        self.__core = core
+        self.__screen = screen
 
     def run(self):
         LOG.info("Emulator started")
-        core = Core()
-        kernel = Kernel(core=core)
+        kernel = Kernel(core=self.__core, screen=self.__screen)
 
         msg = [ord(c) for c in "HELLO WORLD!"]
         msg.append(0x00)
@@ -33,11 +33,11 @@ class Emulator(QThread):
         addr = stdlib.malloc(len(msg))
         length = len(msg)
 
-        core.EAX = 4        # sys_write
-        core.EBX = 1        # stderr
-        core.ECX = addr
-        core.EDX = length
-        core.set_memory_range(addr, msg)
+        self.__core.EAX = 4        # sys_write
+        self.__core.EBX = 1        # stderr
+        self.__core.ECX = addr
+        self.__core.EDX = length
+        self.__core.set_memory_range(addr, msg)
 
         kernel.interrupt(0x80)      # handover to kernel
 
@@ -46,9 +46,9 @@ class Emulator(QThread):
 
 def main():
     app = QApplication(sys.argv)
-    screen = ScreenEGA(scale=4)
+    screen = ScreenEGA(scale=2)
     screen.show()
-    t = Emulator(screen, Kernel(screen=screen))
+    t = Emulator(core=Core(), screen=screen)
     t.start()
 
     sys.exit(app.exec_())
