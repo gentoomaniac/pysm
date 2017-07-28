@@ -5,6 +5,7 @@ import datatypes.exceptions as exceptions
 import register as r
 
 from datatypes.dword import *
+from singleton import Singleton
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('core')
@@ -13,7 +14,8 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
-class Core(object):
+
+class Core(metaclass=Singleton): # This shouldn't be a singleton
 
     def __init__(self):
         # memory
@@ -39,39 +41,6 @@ class Core(object):
         self._IP = 0        # instruction pointer
         self._EFLAGS = 0    # Flags register
         self._stack_pointer = -1
-
-        # https://filippo.io/linux-syscall-table/
-
-        # some management tables
-        self._syscalls = {
-            0x01: self.sys_exit,
-            0x04: self.sys_write
-        }
-
-    def interrupt(self, num):
-        if num == 0x80:
-            self._syscalls[self.EAX]()
-
-    def sys_exit(self):
-        LOG.debug("sys_exit() ...")
-
-    def sys_write(self):
-        LOG.debug("Printing to screen ...")
-        msg_addr = self.ECX
-        msg_len = self.EDX
-        msg_target = self.EBX
-
-        if msg_target == 1:
-            fn = print
-        elif msg_target == 2:
-            fn = LOG.error
-        else:
-            raise ValueError("sys_write() can only write to stdout or stderr")
-
-        msg = self.get_memory_range(msg_addr, msg_len)
-        msg = [chr(c) for c in msg]
-        # LOG.debug("read from memory: {}".format(msg))
-        fn("".join(msg))
 
 
     """ Stack

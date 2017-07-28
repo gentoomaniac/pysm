@@ -1,3 +1,4 @@
+import logging
 import math
 import sys
 import time
@@ -7,6 +8,13 @@ from PyQt5.QtGui import QPixmap, QImage, qRgb
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QPoint
 
 from characters import ascii_dos
+
+FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
+LOG = logging.getLogger('kernel')
+LOG.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setFormatter(logging.Formatter(FORMAT))
+LOG.addHandler(ch)
 
 class PixelIndexError(Exception):
     def __init__(self):
@@ -138,6 +146,7 @@ class ScreenEGA(QMainWindow):
 
 
     def setCharacter(self, c, x, y, color):
+        LOG.debug("Setting character '{}' at ({}/{}) in color {}".format(c, x, y, color))
         if c < 0 or c > 254:
             raise AsciiIndexError()
         if x < 0 or x >= ScreenEGA.screen_width/ScreenEGA.character_cell_width:

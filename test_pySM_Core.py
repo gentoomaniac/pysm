@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import stdlib
 from core import Core
-import datatypes.exceptions as exceptions
+from kernel import Kernel
 
 FORMAT = '%(asctime)-15s %(name)-12s %(levelname)-8s %(message)s'
 LOG = logging.getLogger('t_memory')
@@ -153,6 +153,7 @@ class TestPySM_Core(TestCase):
     def test_sys_write(self):
         LOG.debug("Testing sys_write() ...")
         core = Core()
+        kernel = Kernel(core=core)
 
         msg = [ord(c) for c in "Hello!"]
         msg.append(0x00)
@@ -160,13 +161,12 @@ class TestPySM_Core(TestCase):
         addr = stdlib.malloc(len(msg))
         length = len(msg)
 
-        core.set_memory_range(addr, msg)
-
         core.EAX = 4        # sys_write
         core.EBX = 2        # stderr
         core.ECX = addr
         core.EDX = length
+        core.set_memory_range(addr, msg)
 
-        core.interrupt(0x80)      # handover to core
+        kernel.interrupt(0x80)      # handover to kernel
 
         stdlib.free(addr)
