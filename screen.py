@@ -271,15 +271,16 @@ class TestVideo(QThread):
 #                self._screen.setCharacter(c, x, y, 10)
 #                c = 1 if c == 2 else 2
 
-#        c = 0
-#        color = 1
-#        for y in range(0, 25):
-#            for x in range(0, 40):
-        #        self._screen.cls()
-#                self._screen.setCharacter(c, x, y, color)
-#                c = 0 if c >= len(ascii_dos)-1 else c+1
-#                color = 1 if color >= 15 else color+1
-#                time.sleep(0.1)
+       c = 0
+       color = 1
+       for y in range(0, 25):
+           for x in range(0, 40):
+               # self._screen.cls()
+               self._screen.setCharacter(c, x, y, color)
+               self._screen.update_screen_buffer()
+               c = 0 if c >= len(ascii_dos)-1 else c+1
+               color = 1 if color >= 15 else color+1
+               # time.sleep(0.1)
 
         #self._screen.drawLine((10, 10), (12, 100), 5)
         #self._screen.drawLine((20, 20), (20, 100), 6)
@@ -297,30 +298,30 @@ class TestVideo(QThread):
         #    x = x+1
         #    color = 1 if color >= 15 else color + 1
 
-#        self._screen.drawFunction(lambda x: x/2, 12)
-#        self._screen.update_screen_buffer()
-#        self._screen.drawFunction(lambda x: math.sin(x/2)*20, 11, offset=20)
-#        self._screen.update_screen_buffer()
-#        self._screen.drawFunction(lambda x: math.sin(x/10)*20, 13, offset=40)
-#        self._screen.update_screen_buffer()
-#        self._screen.drawFunction(lambda x: math.cos(x/20)*20, 14, offset=100)
-#        self._screen.update_screen_buffer()
-#        self._screen.drawFunction(lambda x: math.tan(x/100)*10, 15, offset=100)
-#        self._screen.update_screen_buffer()
-#        self._screen.drawSquare((30, 40), 20, 20, 14)
-#        self._screen.update_screen_buffer()
+       # self._screen.drawFunction(lambda x: x/2, 12)
+       # self._screen.update_screen_buffer()
+       # self._screen.drawFunction(lambda x: math.sin(x/2)*20, 11, offset=20)
+       # self._screen.update_screen_buffer()
+       # self._screen.drawFunction(lambda x: math.sin(x/10)*20, 13, offset=40)
+       # self._screen.update_screen_buffer()
+       # self._screen.drawFunction(lambda x: math.cos(x/20)*20, 14, offset=100)
+       # self._screen.update_screen_buffer()
+       # self._screen.drawFunction(lambda x: math.tan(x/100)*10, 15, offset=100)
+       # self._screen.update_screen_buffer()
+       # self._screen.drawSquare((30, 40), 20, 20, 14)
+       # self._screen.update_screen_buffer()
 
         #self._screen.drawFunction(lambda x: [(x*x+2*x+5)/100], 12, start=50)
 
-        color = 11
-        for xc in range(0, 1000):
-            self._screen.cls()
-            try:
-                self._screen.drawFunction(lambda x: math.sin((x-xc)/20) * 20, 13, offset=100)
-                self._screen.update_screen_buffer()
-            except PixelColorError:
-                pass
-            time.sleep(0.05)
+        # color = 11
+        # for xc in range(0, 1000):
+        #     self._screen.cls()
+        #     try:
+        #         self._screen.drawFunction(lambda x: math.sin((x-xc)/20) * 20, 13, offset=100)
+        #         self._screen.update_screen_buffer()
+        #     except PixelColorError:
+        #         pass
+        #     time.sleep(0.05)
 
 #        import random
 #        for x in range(0, 320):
