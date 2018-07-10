@@ -12,6 +12,7 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
+
 class Kernel(metaclass=Singleton):
 
     def __init__(self, core=Core(), screen=None):
@@ -49,7 +50,7 @@ class Kernel(metaclass=Singleton):
                 raise IOError("No screen connected!")
             x=0
             for c in msg:
-                self.__screen.setCharacter(c, x, 0, 10)
+                self.__screen.set_character(c, x, 0, 10)
                 x += 1
             self.__screen.update_screen_buffer()
         elif msg_target == 2:

@@ -12,6 +12,7 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter(FORMAT))
 LOG.addHandler(ch)
 
+
 def main():
     instructions = []
     tokens = tokenize("input.asm")
@@ -29,9 +30,11 @@ def main():
     interpreter = Interpreter(instructions)
     interpreter.run()
 
+
 def prepare_nltk():
     """ Download nltk tokenizer data files"""
     nltk.download(info_or_id='punkt')
+
 
 def tokenize(file):
     prepare_nltk()
@@ -40,10 +43,10 @@ def tokenize(file):
             lines = f.readlines()
             return [nltk.word_tokenize(l) for l in lines]
 
-
     except Exception as e:
         LOG.error("Couldn't read input file: {}".format(e))
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

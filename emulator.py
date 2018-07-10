@@ -34,7 +34,7 @@ class Emulator(QThread):
         length = len(msg)
 
         self.__core.EAX = 4        # sys_write
-        self.__core.EBX = 1        # stderr
+        self.__core.EBX = 1        # stdout
         self.__core.ECX = addr
         self.__core.EDX = length
         self.__core.set_memory_range(addr, msg)
